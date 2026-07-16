@@ -1,0 +1,6 @@
+import { z } from 'zod';
+export const providerQuerySchema = z.object({ region: z.string().trim().max(120).optional(), type: z.enum(['PSYCHOLOGIST', 'COUNSELOR', 'CRISIS_LINE', 'CLINIC']).optional(), language: z.string().trim().toLowerCase().max(20).optional(), emergency: z.coerce.boolean().optional() });
+export const providerSchema = z.object({ slug: z.string().trim().toLowerCase().min(3).max(100).regex(/^[a-z0-9-]+$/), name: z.string().trim().min(1).max(160), type: z.enum(['PSYCHOLOGIST', 'COUNSELOR', 'CRISIS_LINE', 'CLINIC']), description: z.string().trim().min(1).max(2000), phone: z.string().trim().max(30).optional(), websiteUrl: z.string().url().max(2000).optional(), address: z.string().trim().max(500).optional(), region: z.string().trim().min(1).max(120), languages: z.array(z.string().trim().toLowerCase().min(2).max(20)).min(1).max(20), isEmergency: z.boolean().default(false), isVerified: z.boolean().default(false), isActive: z.boolean().default(true) });
+export const updateProviderSchema = providerSchema.partial().omit({ slug: true }).refine((value) => Object.keys(value).length > 0, { message: 'At least one field is required' });
+export type ProviderDTO = z.infer<typeof providerSchema>;
+export type UpdateProviderDTO = z.infer<typeof updateProviderSchema>;

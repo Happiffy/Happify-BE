@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { requireAuth } from '@/modules/auth/auth.middleware.js';
+import controller from '@/modules/emergency-contact/emergency-contact.controller.js';
+const router = Router();
+router.use(requireAuth);
+router.get('/', controller.list.bind(controller));
+router.post('/', controller.create.bind(controller));
+router.patch('/:id', controller.update.bind(controller));
+router.delete('/:id', controller.remove.bind(controller));
+export default router;

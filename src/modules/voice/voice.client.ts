@@ -16,7 +16,9 @@ export async function processVoiceAudio(audio: Buffer, contentType: string, lang
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) throw new Error(response.status === 413 ? 'AUDIO_TOO_LARGE' : 'VOICE_UPSTREAM_FAILED');
-  return response.json() as Promise<Record<string, unknown>>;
+  const contentTypeHeader = response.headers.get('content-type') ?? '';
+  if (!contentTypeHeader.toLowerCase().includes('application/json')) throw new Error('VOICE_UPSTREAM_INVALID');
+  return response.json() as Promise<unknown>;
 }
 
 export async function fetchVoiceAudio(path: string) {

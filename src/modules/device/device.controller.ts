@@ -1,68 +1,36 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import type { AuthUser } from '@/modules/auth/auth.middleware.js';
+import { getAuthUser } from '@/modules/auth/auth.middleware.js';
+import { getRuntimeDevice } from '@/modules/device/device.middleware.js';
 import deviceService from '@/modules/device/device.service.js';
-import { startPairingSchema, updateDeviceSchema } from '@/modules/device/device.validation.js';
+import { cameraObservationSchema, commandSchema, commandStatusSchema, deviceIdParamsSchema, emotionObservationSchema, firmwareSchema, firmwareStatusSchema, heartbeatSchema, moodSyncSchema, otaSchema, otaStatusSchema, startPairingSchema, telemetryBatchSchema, updateDeviceSchema } from '@/modules/device/device.validation.js';
 import { getErrorMessage, getStatusCode } from '@/utils/request.util.js';
 
+const idSchema = deviceIdParamsSchema;
 class DeviceController {
-  async list(_request: Request, response: Response) {
-    try {
-      const authUser = response.locals.authUser as AuthUser;
-      return response.json({ status: 'success', data: { items: await deviceService.list(authUser.id) } });
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
-
-  async get(request: Request, response: Response) {
-    try {
-      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
-      const authUser = response.locals.authUser as AuthUser;
-      return response.json({ status: 'success', data: { device: await deviceService.get(id, authUser.id) } });
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
-
-  async update(request: Request, response: Response) {
-    try {
-      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
-      const body = updateDeviceSchema.parse(request.body);
-      const authUser = response.locals.authUser as AuthUser;
-      return response.json({ status: 'success', data: { device: await deviceService.update(id, authUser.id, body.displayName) } });
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
-
-  async startPairing(request: Request, response: Response) {
-    try {
-      const body = startPairingSchema.parse(request.body);
-      const authUser = response.locals.authUser as AuthUser;
-      const session = await deviceService.startPairing(authUser.id, body.serialNumber, body.claimSecret);
-      return response.status(201).json({ status: 'success', data: { session } });
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
-
-  async getPairing(request: Request, response: Response) {
-    try {
-      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
-      const authUser = response.locals.authUser as AuthUser;
-      return response.json({ status: 'success', data: { session: await deviceService.getPairing(id, authUser.id) } });
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
-
-  async completePairing(request: Request, response: Response) {
-    try {
-      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
-      const authUser = response.locals.authUser as AuthUser;
-      return response.json({ status: 'success', data: { device: await deviceService.completePairing(id, authUser.id) } });
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
-
-  async cancelPairing(request: Request, response: Response) {
-    try {
-      const { id } = z.object({ id: z.string().min(1) }).parse(request.params);
-      const authUser = response.locals.authUser as AuthUser;
-      await deviceService.cancelPairing(id, authUser.id);
-      return response.status(204).send();
-    } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); }
-  }
+  async list(_request: Request, response: Response) { try { return response.json({ status: 'success', data: { items: await deviceService.list(getAuthUser(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async get(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); return response.json({ status: 'success', data: { device: await deviceService.get(id, getAuthUser(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async update(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const body = updateDeviceSchema.parse(request.body); return response.json({ status: 'success', data: { device: await deviceService.update(id, getAuthUser(response).id, body.displayName) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async startPairing(request: Request, response: Response) { try { const body = startPairingSchema.parse(request.body); const session = await deviceService.startPairing(getAuthUser(response).id, body.serialNumber, body.claimSecret); return response.status(201).json({ status: 'success', data: { session } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async getPairing(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); return response.json({ status: 'success', data: { session: await deviceService.getPairing(id, getAuthUser(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async completePairing(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); return response.json({ status: 'success', data: { device: await deviceService.completePairing(id, getAuthUser(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async cancelPairing(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); await deviceService.cancelPairing(id, getAuthUser(response).id); return response.status(204).send(); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async unpair(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const { revoke } = z.object({ revoke: z.boolean().default(false) }).parse(request.body); return response.json({ status: 'success', data: { device: await deviceService.unpair(id, getAuthUser(response).id, revoke) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async credential(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); return response.status(201).json({ status: 'success', data: { credential: await deviceService.issueCredential(id, getAuthUser(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async telemetry(request: Request, response: Response) { try { const device = getRuntimeDevice(response); const result = await deviceService.ingestTelemetry(device.id, telemetryBatchSchema.parse(request.body).items); return response.status(202).json({ status: 'success', data: result }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async heartbeat(request: Request, response: Response) { try { const device = getRuntimeDevice(response); return response.status(202).json({ status: 'success', data: { device: await deviceService.heartbeat(device.id, heartbeatSchema.parse(request.body)) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async emotionObservation(request: Request, response: Response) { try { const device = getRuntimeDevice(response); const observation = await deviceService.ingestEmotionObservation(device.id, device.ownerId, emotionObservationSchema.parse(request.body)); return response.status(202).json({ status: 'success', data: { observation, observationStatement: 'The authenticated hardware and its declared model supply already-extracted observations; the backend does not accept or infer from raw images.' } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async cameraObservation(request: Request, response: Response) { try { const device = getRuntimeDevice(response); const observation = await deviceService.ingestEmotionObservation(device.id, device.ownerId, cameraObservationSchema.parse(request.body)); return response.status(202).json({ status: 'success', data: { observation, observationStatement: 'The authenticated camera hardware and its declared model supply facePresent, eyeContact, and expression probabilities; no raw images are accepted or stored.' } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async moodSync(request: Request, response: Response) { try { const device = getRuntimeDevice(response); return response.status(202).json({ status: 'success', data: { checkIn: await deviceService.syncMood(device.id, device.ownerId, moodSyncSchema.parse(request.body)) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async listTelemetry(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const limit = z.coerce.number().int().min(1).max(500).default(100).parse(request.query.limit); return response.json({ status: 'success', data: { items: await deviceService.listTelemetry(id, getAuthUser(response).id, limit) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async listFirmwareReleases(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); return response.json({ status: 'success', data: { items: await deviceService.listFirmwareReleases(id, getAuthUser(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async createCommand(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const body = commandSchema.parse(request.body); const command = await deviceService.createCommand(id, getAuthUser(response).id, body.type, body.payload, body.idempotencyKey); return response.status(201).json({ status: 'success', data: { command } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async pendingCommands(_request: Request, response: Response) { try { return response.json({ status: 'success', data: { items: await deviceService.listPendingCommands(getRuntimeDevice(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async updateCommand(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const body = commandStatusSchema.parse(request.body); return response.json({ status: 'success', data: { command: await deviceService.updateCommand(getRuntimeDevice(response).id, id, body.status, body.errorCode) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async createFirmware(request: Request, response: Response) { try { const body = firmwareSchema.parse(request.body); const firmware = await deviceService.createFirmware(body.model, body.version, body.protocolVersion, body.downloadUrl, body.checksumSha256, body.hardwareRevision, body.minimumBootloaderVersion, body.releaseNotes); return response.status(201).json({ status: 'success', data: { firmware } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async updateFirmwareStatus(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const body = firmwareStatusSchema.parse(request.body); return response.json({ status: 'success', data: { firmware: await deviceService.updateFirmwareStatus(id, body.status) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async createOta(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const body = otaSchema.parse(request.body); const ota = await deviceService.createOta(id, getAuthUser(response).id, body.firmwareId); return response.status(201).json({ status: 'success', data: { ota } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async pendingOta(_request: Request, response: Response) { try { return response.json({ status: 'success', data: { items: await deviceService.listPendingOta(getRuntimeDevice(response).id) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
+  async updateOta(request: Request, response: Response) { try { const { id } = idSchema.parse(request.params); const body = otaStatusSchema.parse(request.body); return response.json({ status: 'success', data: { ota: await deviceService.updateOta(getRuntimeDevice(response).id, id, body.status, body.progress, body.errorCode) } }); } catch (error) { return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) }); } }
 }
-
 export default new DeviceController();

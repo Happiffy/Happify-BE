@@ -24,17 +24,17 @@ function getExtension(contentType: string) {
 }
 
 class MediaService {
-  async uploadImage(body: { imageBase64: string, contentType: string }) {
+  async uploadImage(userId: string, body: { imageBase64: string, contentType: string }) {
     const client = getClient();
-    const key = `happify/${randomUUID()}.${getExtension(body.contentType)}`;
+    const key = `happify/${userId}/${randomUUID()}.${getExtension(body.contentType)}`;
     const buffer = Buffer.from(body.imageBase64.replace(/^data:image\/[a-zA-Z]+;base64,/, ''), 'base64');
+    if (buffer.length === 0 || buffer.length > Number(process.env.MEDIA_MAX_IMAGE_BYTES ?? 5242880)) throw new Error('IMAGE_TOO_LARGE');
 
     await client.send(new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: buffer,
       ContentType: body.contentType,
-      ACL: 'public-read',
     }));
 
     const publicApiUrl = process.env.PUBLIC_API_URL ?? 'http://localhost:4000';

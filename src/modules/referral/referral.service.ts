@@ -8,7 +8,7 @@ import { completeText } from '@/utils/ai.util.js';
 class ReferralService {
   async list(authUser: AuthUser, page: number, limit: number) {
     return referralRepository.referral.findMany({
-      where: authUser.role === 'PSYCHOLOGIST' ? {} : { userId: authUser.id },
+      where: authUser.role === 'PSYCHOLOGIST' || authUser.role === 'ADMIN' ? {} : { userId: authUser.id },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: (page - 1) * limit,

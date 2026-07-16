@@ -1,15 +1,33 @@
 import { Router } from 'express';
-import { requireAuth } from '@/modules/auth/auth.middleware.js';
+import { requireAuth, requireRole } from '@/modules/auth/auth.middleware.js';
+import { requireDeviceAuth } from '@/modules/device/device.middleware.js';
 import deviceController from '@/modules/device/device.controller.js';
 
 const router = Router();
+router.post('/runtime/telemetry', requireDeviceAuth, deviceController.telemetry.bind(deviceController));
+router.post('/runtime/heartbeat', requireDeviceAuth, deviceController.heartbeat.bind(deviceController));
+router.post('/runtime/emotion-observations', requireDeviceAuth, deviceController.emotionObservation.bind(deviceController));
+router.post('/runtime/camera-observations', requireDeviceAuth, deviceController.cameraObservation.bind(deviceController));
+router.post('/runtime/mood-sync', requireDeviceAuth, deviceController.moodSync.bind(deviceController));
+router.get('/runtime/commands', requireDeviceAuth, deviceController.pendingCommands.bind(deviceController));
+router.patch('/runtime/commands/:id', requireDeviceAuth, deviceController.updateCommand.bind(deviceController));
+router.get('/runtime/ota', requireDeviceAuth, deviceController.pendingOta.bind(deviceController));
+router.patch('/runtime/ota/:id', requireDeviceAuth, deviceController.updateOta.bind(deviceController));
 router.use(requireAuth);
 router.get('/', deviceController.list.bind(deviceController));
 router.post('/pairing-sessions', deviceController.startPairing.bind(deviceController));
 router.get('/pairing-sessions/:id', deviceController.getPairing.bind(deviceController));
 router.post('/pairing-sessions/:id/complete', deviceController.completePairing.bind(deviceController));
 router.delete('/pairing-sessions/:id', deviceController.cancelPairing.bind(deviceController));
+router.post('/firmware', requireRole('ADMIN'), deviceController.createFirmware.bind(deviceController));
+router.patch('/firmware/:id/status', requireRole('ADMIN'), deviceController.updateFirmwareStatus.bind(deviceController));
 router.get('/:id', deviceController.get.bind(deviceController));
 router.patch('/:id', deviceController.update.bind(deviceController));
+router.delete('/:id', deviceController.unpair.bind(deviceController));
+router.post('/:id/credentials', deviceController.credential.bind(deviceController));
+router.get('/:id/telemetry', deviceController.listTelemetry.bind(deviceController));
+router.get('/:id/firmware-releases', deviceController.listFirmwareReleases.bind(deviceController));
+router.post('/:id/commands', deviceController.createCommand.bind(deviceController));
+router.post('/:id/ota', deviceController.createOta.bind(deviceController));
 
 export default router;

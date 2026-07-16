@@ -9,30 +9,40 @@ export type AuthUser = {
   role: UserRole;
 };
 
+export async function authenticateToken(token: string): Promise<AuthUser> {
+  const decodedToken = await firebaseAuth.verifyIdToken(token, true);
+  const user = await authRepository.user.findUnique({
+    where: { firebaseUid: decodedToken.uid },
+    select: { id: true, firebaseUid: true, role: true },
+  });
+  if (!user) throw new Error('ACCOUNT_NOT_REGISTERED');
+  return user;
+}
+
+export function getAuthUser(response: Response): AuthUser {
+  const authUser = response.locals.authUser as AuthUser | undefined;
+  if (!authUser) throw new Error('UNAUTHENTICATED');
+  return authUser;
+}
+
 export async function requireAuth(request: Request, response: Response, next: NextFunction) {
   const authorization = request.headers.authorization;
-  const match = authorization?.match(/^Bearer\s+(.+)$/i);
+  const match = authorization?.match(/^Bearer\s+([^\s]+)$/i);
   if (!match?.[1]) return response.status(401).json({ status: 'error', message: 'UNAUTHENTICATED' });
 
   try {
-    const decodedToken = await firebaseAuth.verifyIdToken(match[1], true);
-    const user = await authRepository.user.findUnique({
-      where: { firebaseUid: decodedToken.uid },
-      select: { id: true, firebaseUid: true, role: true },
-    });
-    if (!user) return response.status(401).json({ status: 'error', message: 'ACCOUNT_NOT_REGISTERED' });
-    response.locals.authUser = user;
+    response.locals.authUser = await authenticateToken(match[1]);
     return next();
   } catch {
     return response.status(401).json({ status: 'error', message: 'UNAUTHENTICATED' });
   }
 }
 
-export function requireRole(role: UserRole) {
+export function requireRole(...roles: UserRole[]) {
   return (_request: Request, response: Response, next: NextFunction) => {
     const authUser = response.locals.authUser as AuthUser | undefined;
     if (!authUser) return response.status(401).json({ status: 'error', message: 'UNAUTHENTICATED' });
-    if (authUser.role !== role) return response.status(403).json({ status: 'error', message: 'FORBIDDEN' });
+    if (!roles.includes(authUser.role)) return response.status(403).json({ status: 'error', message: 'FORBIDDEN' });
     return next();
   };
 }

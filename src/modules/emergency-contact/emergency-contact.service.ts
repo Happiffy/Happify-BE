@@ -1,0 +1,9 @@
+import emergencyContactRepository from '@/modules/emergency-contact/emergency-contact.repository.js';
+import type { EmergencyContactDTO, UpdateEmergencyContactDTO } from '@/modules/emergency-contact/emergency-contact.validation.js';
+class EmergencyContactService {
+  list(userId: string) { return emergencyContactRepository.contact.findMany({ where: { userId }, orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }] }); }
+  create(userId: string, body: EmergencyContactDTO) { return emergencyContactRepository.transaction(async (tx) => { if (body.isPrimary) await tx.emergencyContact.updateMany({ where: { userId, isPrimary: true }, data: { isPrimary: false, updatedAt: new Date() } }); return tx.emergencyContact.create({ data: { userId, ...body } }); }); }
+  async update(userId: string, id: string, body: UpdateEmergencyContactDTO) { const contact = await emergencyContactRepository.contact.findFirst({ where: { id, userId }, select: { id: true } }); if (!contact) throw new Error('NOT_FOUND'); return emergencyContactRepository.transaction(async (tx) => { if (body.isPrimary) await tx.emergencyContact.updateMany({ where: { userId, isPrimary: true, id: { not: id } }, data: { isPrimary: false, updatedAt: new Date() } }); return tx.emergencyContact.update({ where: { id }, data: { ...(body.name !== undefined ? { name: body.name } : {}), ...(body.relationship !== undefined ? { relationship: body.relationship } : {}), ...(body.phone !== undefined ? { phone: body.phone } : {}), ...(body.isPrimary !== undefined ? { isPrimary: body.isPrimary } : {}) } }); }); }
+  async remove(userId: string, id: string) { const removed = await emergencyContactRepository.contact.deleteMany({ where: { id, userId } }); if (removed.count !== 1) throw new Error('NOT_FOUND'); }
+}
+export default new EmergencyContactService();

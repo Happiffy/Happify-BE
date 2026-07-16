@@ -1,7 +1,7 @@
 import journalRepository from '@/modules/journal/journal.repository.js';
 import notificationService from '@/modules/notification/notification.service.js';
 import type { CreateJournalDTO } from '@/modules/journal/journal.validation.js';
-import { completeText, parseJsonObject } from '@/utils/ai.util.js';
+import { analyzeJournalWithAi } from '@/modules/journal/journal.client.js';
 import { richTextToPlainText, sanitizeRichText } from '@/utils/html.util.js';
 
 type JournalAnalysis = {
@@ -16,14 +16,16 @@ class JournalService {
     return journalRepository.journalEntry.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: limit, skip: (page - 1) * limit });
   }
 
-  async create(body: CreateJournalDTO) {
+  async create(userId: string, body: CreateJournalDTO) {
     const content = sanitizeRichText(body.content);
     const plainText = richTextToPlainText(content);
     if (!plainText) throw new Error('Journal content is required');
-    const analysis = await this.analyze(plainText, body.detectedMood);
+    const latestAiDocument = await journalRepository.consentDocument.findFirst({ where: { scope: 'AI_PROCESSING', isActive: true, effectiveAt: { lte: new Date() } }, orderBy: { version: 'desc' }, select: { id: true } });
+    const aiConsent = latestAiDocument ? await journalRepository.consent.findFirst({ where: { userId, documentId: latestAiDocument.id, status: 'ACCEPTED' }, select: { id: true } }) : null;
+    const analysis = aiConsent ? await this.analyze(plainText, body.detectedMood) : this.analyzeHeuristically(plainText, body.detectedMood);
     const journal = await journalRepository.journalEntry.create({
       data: {
-        userId: body.userId,
+        userId,
         title: analysis.title,
         content,
         imageUrl: body.imageUrl ?? null,
@@ -36,10 +38,11 @@ class JournalService {
     if (analysis.riskLevel === 'HIGH' || analysis.riskLevel === 'CRISIS') {
       const referral = await journalRepository.referral.create({
         data: {
-          userId: body.userId,
+          userId,
           riskLevel: analysis.riskLevel,
           reason: `Journal flagged ${analysis.riskLevel.toLowerCase()} risk: ${body.title}`,
-          requestComment: plainText,
+           requestComment: `Professional review requested after ${analysis.riskLevel.toLowerCase()} risk was detected in journal entry "${analysis.title}".`,
+
           providerName: 'Happify Professional Care',
           providerType: 'Verified psychologist',
         },
@@ -56,19 +59,17 @@ class JournalService {
 
   private async analyze(content: string, fallbackMood?: CreateJournalDTO['detectedMood']): Promise<JournalAnalysis> {
     const fallback = this.analyzeHeuristically(content, fallbackMood);
-    const aiResponse = await completeText([
-      {
-        role: 'system',
-        content: 'Analyze a wellbeing journal. Return only JSON with keys title (a concise 2-5 word topic, never copy the full journal), riskLevel (LOW|MEDIUM|HIGH|CRISIS), detectedMood (HAPPY|CALM|NEUTRAL|ANXIOUS|SAD|DISTRESSED), and aiReflection. Use CRISIS for explicit suicidal intent/self-harm. Reflection must be empathetic, concise, actionable, in the journal language, and must recommend immediate human/emergency help for CRISIS. Never diagnose.',
-      },
-      { role: 'user', content },
-    ], 260);
-    const parsed = parseJsonObject<JournalAnalysis>(aiResponse);
-    const riskLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRISIS'];
-    const moods = ['HAPPY', 'CALM', 'NEUTRAL', 'ANXIOUS', 'SAD', 'DISTRESSED'];
-    if (!parsed || !parsed.title?.trim() || !riskLevels.includes(parsed.riskLevel) || !moods.includes(parsed.detectedMood) || !parsed.aiReflection?.trim()) return fallback;
+    const language = /\b(aku|saya|gue|gw|nggak|tidak|cemas|sedih|capek|takut)\b/i.test(content) ? 'id' : 'en';
+    const result = await analyzeJournalWithAi(content, language);
+    if (!result) return fallback;
     const severity = { LOW: 0, MEDIUM: 1, HIGH: 2, CRISIS: 3 } as const;
-    return severity[fallback.riskLevel] > severity[parsed.riskLevel] ? fallback : parsed;
+    if (severity[fallback.riskLevel] > severity[result.riskLevel]) return fallback;
+    return {
+      title: fallback.title,
+      riskLevel: result.riskLevel,
+      detectedMood: result.detectedMood,
+      aiReflection: result.aiReflection,
+    };
   }
 
   private analyzeHeuristically(content: string, fallbackMood?: CreateJournalDTO['detectedMood']): JournalAnalysis {
