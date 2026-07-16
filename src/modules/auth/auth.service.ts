@@ -16,10 +16,13 @@ class AuthService {
     const existingUser = await authRepository.user.findUnique({ where: { firebaseUid: decodedToken.uid } });
     if (!existingUser && body.mode === 'login') throw new Error('ACCOUNT_NOT_REGISTERED');
 
-    return authRepository.user.upsert({
-      where: { firebaseUid: decodedToken.uid },
-      update: { email: data.email, displayName: data.displayName, avatarUrl: data.avatarUrl },
-      create: data,
+    return authRepository.transaction(async (transaction) => {
+      await transaction.msRole.upsert({ where: { code: 'USER' }, update: {}, create: { code: 'USER' } });
+      return transaction.msUser.upsert({
+        where: { firebaseUid: decodedToken.uid },
+        update: { email: data.email, displayName: data.displayName, avatarUrl: data.avatarUrl },
+        create: data,
+      });
     });
   }
 }
