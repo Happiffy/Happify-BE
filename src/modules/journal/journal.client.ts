@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const baseUrl = (process.env.AI_JOURNAL_BASE_URL ?? process.env.AI_VOICE_BASE_URL)?.replace(/\/$/, '');
+const baseUrl = process.env.AI_SERVICE_BASE_URL?.replace(/\/$/, '');
 const serviceToken = process.env.AI_SERVICE_TOKEN;
 const timeoutMs = Number(process.env.AI_JOURNAL_TIMEOUT_MS ?? 15000);
 
