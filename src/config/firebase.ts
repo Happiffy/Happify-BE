@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { cert, getApp, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getMessaging } from 'firebase-admin/messaging';
 
 function getFirebaseApp() {
   if (getApps().length) return getApp();
@@ -23,3 +24,4 @@ function getFirebaseApp() {
 
 export const firebaseAdmin = getFirebaseApp();
 export const firebaseAuth = getAuth(firebaseAdmin);
+export const firebaseMessaging = getMessaging(firebaseAdmin);

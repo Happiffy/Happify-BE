@@ -1,4 +1,5 @@
 import journalRepository from '@/modules/journal/journal.repository.js';
+import notificationService from '@/modules/notification/notification.service.js';
 import type { CreateJournalDTO } from '@/modules/journal/journal.validation.js';
 import { completeText, parseJsonObject } from '@/utils/ai.util.js';
 import { richTextToPlainText, sanitizeRichText } from '@/utils/html.util.js';
@@ -33,7 +34,7 @@ class JournalService {
     });
 
     if (analysis.riskLevel === 'HIGH' || analysis.riskLevel === 'CRISIS') {
-      await journalRepository.referral.create({
+      const referral = await journalRepository.referral.create({
         data: {
           userId: body.userId,
           riskLevel: analysis.riskLevel,
@@ -43,6 +44,11 @@ class JournalService {
           providerType: 'Verified psychologist',
         },
       });
+      void notificationService.sendToRole('PSYCHOLOGIST', {
+        title: 'New urgent care request',
+        body: 'A care request needs review.',
+        data: { type: 'referral.created', referralId: referral.id, riskLevel: referral.riskLevel, target: 'care' },
+      }).catch(() => undefined);
     }
 
     return journal;

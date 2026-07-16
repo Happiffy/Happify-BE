@@ -1,12 +1,14 @@
+import type { AuthUser } from '@/modules/auth/auth.middleware.js';
+import notificationService from '@/modules/notification/notification.service.js';
 import referralRepository from '@/modules/referral/referral.repository.js';
 import type { CreateCareChatMessageDTO, CreateReferralDTO, ReviewReferralDTO } from '@/modules/referral/referral.validation.js';
 import { broadcast } from '@/modules/realtime/realtime.js';
 import { completeText } from '@/utils/ai.util.js';
 
 class ReferralService {
-  async list(userId: string | undefined, page: number, limit: number) {
+  async list(authUser: AuthUser, page: number, limit: number) {
     return referralRepository.referral.findMany({
-      where: userId ? { userId } : {},
+      where: authUser.role === 'PSYCHOLOGIST' ? {} : { userId: authUser.id },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: (page - 1) * limit,
@@ -18,12 +20,12 @@ class ReferralService {
     });
   }
 
-  async review(id: string, body: ReviewReferralDTO) {
+  async review(id: string, psychologistId: string, body: ReviewReferralDTO) {
     const referral = await referralRepository.referral.update({
       where: { id },
       data: {
         status: body.status,
-        psychologistId: body.psychologistId,
+        psychologistId,
         reviewerComment: body.reviewerComment ?? null,
         reviewedAt: new Date(),
       },
@@ -32,8 +34,8 @@ class ReferralService {
     if (body.status === 'ACCEPTED') {
       await referralRepository.careChatSession.upsert({
         where: { referralId: id },
-        update: { psychologistId: body.psychologistId, status: 'OPEN', closedAt: null },
-        create: { referralId: id, userId: referral.userId, psychologistId: body.psychologistId },
+        update: { psychologistId, status: 'OPEN', closedAt: null },
+        create: { referralId: id, userId: referral.userId, psychologistId },
       });
     }
 
@@ -47,15 +49,20 @@ class ReferralService {
     });
     broadcast('care', { type: 'referral:reviewed', referral: reviewedReferral });
     broadcast(`user:${referral.userId}:care`, { type: 'referral:reviewed', referral: reviewedReferral });
+    void notificationService.sendToUser(referral.userId, {
+      title: 'Care request updated',
+      body: body.status === 'ACCEPTED' ? 'Your care request was accepted.' : 'Your care request has a new update.',
+      data: { type: 'referral.reviewed', referralId: id, status: body.status, target: 'care', ...(reviewedReferral?.chatSession?.id ? { sessionId: reviewedReferral.chatSession.id } : {}) },
+    }).catch(() => undefined);
     return reviewedReferral;
   }
 
-  async create(body: CreateReferralDTO) {
-    const backgroundSnapshot = await this.getUserBackground(body.userId);
+  async create(userId: string, body: CreateReferralDTO) {
+    const backgroundSnapshot = await this.getUserBackground(userId);
 
     const referral = await referralRepository.referral.create({
       data: {
-        userId: body.userId,
+        userId,
         riskLevel: body.riskLevel,
         reason: body.reason,
         requestComment: body.requestComment ?? null,
@@ -66,6 +73,11 @@ class ReferralService {
       },
     });
     broadcast('care', { type: 'referral:created', referral });
+    void notificationService.sendToRole('PSYCHOLOGIST', {
+      title: 'New care request',
+      body: 'A new care request is waiting for review.',
+      data: { type: 'referral.created', referralId: referral.id, riskLevel: referral.riskLevel, target: 'care' },
+    }).catch(() => undefined);
     return referral;
   }
 
@@ -84,7 +96,8 @@ class ReferralService {
     });
   }
 
-  async getChatSession(id: string) {
+  async getChatSession(id: string, userId: string) {
+    await this.requireChatMembership(id, userId);
     return referralRepository.careChatSession.findUnique({
       where: { id },
       include: {
@@ -96,13 +109,20 @@ class ReferralService {
     });
   }
 
-  async updateChatSessionStatus(sessionId: string, status: 'OPEN' | 'CLOSED') {
+  async updateChatSessionStatus(sessionId: string, userId: string, status: 'OPEN' | 'CLOSED') {
+    const membership = await this.requireChatMembership(sessionId, userId);
     const summary = status === 'CLOSED' ? await this.generateSessionSummary(sessionId) : null;
     const session = await referralRepository.careChatSession.update({
       where: { id: sessionId },
       data: { status, closedAt: status === 'CLOSED' ? new Date() : null, ...(summary ? { summary } : {}) },
     });
     broadcast(`care-chat:${sessionId}`, { type: 'care-chat:session', session });
+    const recipientId = userId === membership.userId ? membership.psychologistId : membership.userId;
+    void notificationService.sendToUser(recipientId, {
+      title: 'Care chat updated',
+      body: status === 'CLOSED' ? 'Your care chat was closed.' : 'Your care chat is open.',
+      data: { type: 'care.session', sessionId, status, target: 'chat' },
+    }).catch(() => undefined);
     return session;
   }
 
@@ -126,16 +146,34 @@ class ReferralService {
     return `Talked about: ${firstUserMessage.slice(0, 140) || 'care support'}. ${messages.length} messages exchanged.`;
   }
 
-  async createChatMessage(sessionId: string, body: CreateCareChatMessageDTO) {
+  async createChatMessage(sessionId: string, senderId: string, body: CreateCareChatMessageDTO) {
+    const membership = await this.requireChatMembership(sessionId, senderId);
+    if (membership.status !== 'OPEN') throw new Error('CHAT_CLOSED');
     const message = await referralRepository.careChatMessage.create({
-      data: { sessionId, senderId: body.senderId, content: body.content, imageUrl: body.imageUrl ?? null },
+      data: { sessionId, senderId, content: body.content, imageUrl: body.imageUrl ?? null },
       include: { sender: { select: { id: true, displayName: true, avatarUrl: true, role: true } } },
     });
     const session = await referralRepository.careChatSession.update({ where: { id: sessionId }, data: { updatedAt: new Date() } });
     broadcast(`care-chat:${sessionId}`, { type: 'care-chat:message', message });
     broadcast(`user:${session.userId}:care`, { type: 'care-chat:message', message });
     broadcast(`user:${session.psychologistId}:care`, { type: 'care-chat:message', message });
+    const recipientId = senderId === membership.userId ? membership.psychologistId : membership.userId;
+    void notificationService.sendToUser(recipientId, {
+      title: 'New care message',
+      body: 'You have a new message in your care chat.',
+      data: { type: 'care.message', sessionId, messageId: message.id, target: 'chat' },
+    }).catch(() => undefined);
     return message;
+  }
+
+  private async requireChatMembership(sessionId: string, userId: string) {
+    const session = await referralRepository.careChatSession.findUnique({
+      where: { id: sessionId },
+      select: { userId: true, psychologistId: true, status: true },
+    });
+    if (!session) throw new Error('NOT_FOUND');
+    if (session.userId !== userId && session.psychologistId !== userId) throw new Error('FORBIDDEN');
+    return session;
   }
 
   private async getUserBackground(userId: string) {

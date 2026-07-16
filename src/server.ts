@@ -7,20 +7,24 @@ import morgan from 'morgan';
 import analyticsRoutes from '@/modules/analytics/analytics.routes.js';
 import authRoutes from '@/modules/auth/auth.routes.js';
 import communityRoutes from '@/modules/community/community.routes.js';
+import deviceRoutes from '@/modules/device/device.routes.js';
 import heatmapRoutes from '@/modules/heatmap/heatmap.routes.js';
 import journalRoutes from '@/modules/journal/journal.routes.js';
 import mediaRoutes from '@/modules/media/media.routes.js';
 import moodRoutes from '@/modules/mood/mood.routes.js';
+import notificationRoutes from '@/modules/notification/notification.routes.js';
 import preferenceRoutes from '@/modules/preference/preference.routes.js';
 import profileRoutes from '@/modules/profile/profile.routes.js';
 import referralRoutes from '@/modules/referral/referral.routes.js';
 import { attachRealtimeServer } from '@/modules/realtime/realtime.js';
+import voiceRoutes from '@/modules/voice/voice.routes.js';
 
 const port = Number(process.env.PORT ?? 4000);
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') ?? true }));
+app.use('/voice', voiceRoutes);
 app.use(express.json({ limit: '8mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
@@ -32,8 +36,10 @@ app.use('/mood', moodRoutes);
 app.use('/journal', journalRoutes);
 app.use('/media', mediaRoutes);
 app.use('/community', communityRoutes);
+app.use('/devices', deviceRoutes);
 app.use('/heatmap', heatmapRoutes);
 app.use('/referral', referralRoutes);
+app.use('/notifications', notificationRoutes);
 app.use('/preferences', preferenceRoutes);
 app.use('/profile', profileRoutes);
 
