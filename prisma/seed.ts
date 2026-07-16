@@ -28,13 +28,16 @@ const mindfulnessActivities = [
   { slug: 'mindful-pause-id', type: 'MEDITATION' as const, title: 'Jeda Sadar', description: 'Meditasi singkat untuk memberi ruang antara emosi dan respons.', durationSeconds: 180, locale: 'id', steps: ['Duduk dengan nyaman', 'Perhatikan napas tanpa mengubahnya', 'Sadari pikiran yang muncul', 'Kembali ke napas dengan lembut'] },
 ];
 
-async function ensureFirebaseUser(email: string, displayName: string) {
+async function ensureFirebaseUser(email: string, displayName: string, resetPassword: boolean) {
+  const password = `Hp!${randomBytes(18).toString('base64url')}`;
   try {
-    const user = await firebaseAuth.getUserByEmail(email);
-    return { user, password: null as string | null };
+    const existing = await firebaseAuth.getUserByEmail(email);
+    const user = resetPassword
+      ? await firebaseAuth.updateUser(existing.uid, { password, displayName, disabled: false })
+      : existing;
+    return { user, password: resetPassword ? password : null as string | null };
   } catch (error: unknown) {
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'auth/user-not-found') {
-      const password = `Hp!${randomBytes(18).toString('base64url')}`;
       const user = await firebaseAuth.createUser({ email, password, displayName, emailVerified: true, disabled: false });
       return { user, password };
     }
@@ -43,9 +46,13 @@ async function ensureFirebaseUser(email: string, displayName: string) {
 }
 
 async function main() {
+  const [existingUser, existingPsychologist] = await Promise.all([
+    prisma.msUser.findUnique({ where: { email: userEmail }, select: { id: true } }),
+    prisma.msUser.findUnique({ where: { email: psychologistEmail }, select: { id: true } }),
+  ]);
   const [seededUser, seededPsychologist] = await Promise.all([
-    ensureFirebaseUser(userEmail, 'Nadia Pratama'),
-    ensureFirebaseUser(psychologistEmail, 'Dr. Maya Santoso, M.Psi., Psikolog'),
+    ensureFirebaseUser(userEmail, 'Nadia Pratama', !existingUser),
+    ensureFirebaseUser(psychologistEmail, 'Dr. Maya Santoso, M.Psi., Psikolog', !existingPsychologist),
   ]);
   const firebaseUser = seededUser.user;
   const firebasePsychologist = seededPsychologist.user;
@@ -135,7 +142,7 @@ async function main() {
       { sessionId: chat.id, senderId: user.id, content: 'Halo, saya ingin membahas cara mengelola rasa cemas menjelang pekerjaan penting.', createdAt: new Date('2026-07-16T08:30:00.000Z') },
       { sessionId: chat.id, senderId: psychologist.id, content: 'Terima kasih sudah berbagi. Kita bisa mulai dengan mengenali situasi yang paling memicu dan memilih satu strategi yang realistis untuk dicoba minggu ini.', createdAt: new Date('2026-07-16T08:38:00.000Z') },
     ] });
-  });
+  }, { maxWait: 15000, timeout: 60000 });
 
   for (const account of [
     { email: userEmail, password: seededUser.password },
