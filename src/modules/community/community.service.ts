@@ -42,12 +42,12 @@ class CommunityService {
 
   async support(postId: string, userId: string) {
     return communityRepository.transaction(async (transaction) => {
-      const post = await transaction.communityPost.findFirst({ where: { id: postId, isHidden: false }, select: { id: true } });
+      const post = await transaction.trCommunityPost.findFirst({ where: { id: postId, isHidden: false }, select: { id: true } });
       if (!post) throw new Error('NOT_FOUND');
-      const existing = await transaction.communitySupport.findUnique({ where: { userId_postId: { userId, postId } } });
-      if (existing) return transaction.communityPost.findUnique({ where: { id: postId } });
-      await transaction.communitySupport.create({ data: { userId, postId } });
-      const updated = await transaction.communityPost.update({ where: { id: postId }, data: { supportCount: { increment: 1 } } });
+      const existing = await transaction.trCommunitySupport.findUnique({ where: { userId_postId: { userId, postId } } });
+      if (existing) return transaction.trCommunityPost.findUnique({ where: { id: postId } });
+      await transaction.trCommunitySupport.create({ data: { userId, postId } });
+      const updated = await transaction.trCommunityPost.update({ where: { id: postId }, data: { supportCount: { increment: 1 } } });
       broadcast('community', { type: 'community:support', postId, supportCount: updated.supportCount });
       return updated;
     });
@@ -83,17 +83,17 @@ class CommunityService {
     return communityRepository.transaction(async (transaction) => {
       if (body.action === 'HIDE' || body.action === 'RESTORE') {
         const hidden = body.action === 'HIDE';
-        if (body.targetType === 'POST') await transaction.communityPost.update({ where: { id: body.targetId }, data: { isHidden: hidden } });
-        else await transaction.communityComment.update({ where: { id: body.targetId }, data: { isHidden: hidden } });
+        if (body.targetType === 'POST') await transaction.trCommunityPost.update({ where: { id: body.targetId }, data: { isHidden: hidden } });
+        else await transaction.trCommunityComment.update({ where: { id: body.targetId }, data: { isHidden: hidden } });
       }
       if (body.action === 'RESOLVE_REPORT' || body.action === 'DISMISS_REPORT') {
         if (!body.reportId) throw new Error('REPORT_REQUIRED');
-        await transaction.communityReport.update({
+        await transaction.trCommunityReport.update({
           where: { id: body.reportId },
           data: { status: body.action === 'RESOLVE_REPORT' ? 'RESOLVED' : 'DISMISSED', resolvedAt: new Date() },
         });
       }
-      const audit = await transaction.communityModerationAudit.create({
+      const audit = await transaction.trCommunityModerationAudit.create({
         data: { moderatorId, action: body.action, targetType: body.targetType, targetId: body.targetId, reportId: body.reportId ?? null, reason: body.reason },
       });
       broadcast('community', { type: 'community:moderated', targetType: body.targetType, targetId: body.targetId, action: body.action });

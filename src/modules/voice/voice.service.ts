@@ -24,7 +24,7 @@ class VoiceService {
     const { upstreamAudioPath, riskLevel, transcript, responseText, detectedMood, emotionConfidence, upstreamRequestId } = result.data;
     const turn = await voiceRepository.transaction(async (transaction) => {
       const referral = riskLevel === 'HIGH' || riskLevel === 'CRISIS'
-        ? await transaction.referral.create({
+        ? await transaction.trReferral.create({
             data: {
               userId,
               riskLevel,
@@ -36,7 +36,7 @@ class VoiceService {
           })
         : null;
 
-      return transaction.voiceTurn.create({
+      return transaction.trVoiceTurn.create({
         data: { userId, sessionId: sessionId ?? null, idempotencyKey: idempotencyKey ?? null, language, transcript, responseText, detectedMood, emotionConfidence, riskLevel, upstreamRequestId, upstreamAudioPath, audioExpiresAt: upstreamAudioPath ? new Date(Date.now() + audioTtlMs) : null, referralId: referral?.id ?? null },
         include: { referral: true },
       });

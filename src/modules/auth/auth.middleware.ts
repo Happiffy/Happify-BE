@@ -21,7 +21,7 @@ export async function authenticateToken(token: string): Promise<AuthUser> {
     select: { id: true, firebaseUid: true, role: true },
   });
   if (!user || !isUserRole(user.role)) throw new Error('ACCOUNT_NOT_REGISTERED');
-  return user;
+  return { ...user, role: user.role as UserRole };
 }
 
 export function getAuthUser(response: Response): AuthUser {

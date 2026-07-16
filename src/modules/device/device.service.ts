@@ -80,12 +80,12 @@ class DeviceService {
 
   async completePairing(id: string, userId: string) {
     return deviceRepository.transaction(async (transaction) => {
-      const session = await transaction.devicePairingSession.findFirst({ where: { id, userId, status: 'PENDING' } });
+      const session = await transaction.trDevicePairingSession.findFirst({ where: { id, userId, status: 'PENDING' } });
       if (!session || session.expiresAt <= new Date()) throw new Error('PAIRING_INVALID');
-      const claimed = await transaction.device.updateMany({ where: { id: session.deviceId, ownerId: null, status: 'UNPAIRED' }, data: { ownerId: userId, status: 'PAIRED', pairedAt: new Date() } });
+      const claimed = await transaction.msDevice.updateMany({ where: { id: session.deviceId, ownerId: null, status: 'UNPAIRED' }, data: { ownerId: userId, status: 'PAIRED', pairedAt: new Date() } });
       if (claimed.count !== 1) throw new Error('DEVICE_ALREADY_PAIRED');
-      await transaction.devicePairingSession.update({ where: { id }, data: { status: 'COMPLETED', completedAt: new Date() } });
-      return transaction.device.findUnique({ where: { id: session.deviceId }, select: { id: true, serialNumber: true, model: true, displayName: true, status: true, pairedAt: true, updatedAt: true } });
+      await transaction.trDevicePairingSession.update({ where: { id }, data: { status: 'COMPLETED', completedAt: new Date() } });
+      return transaction.msDevice.findUnique({ where: { id: session.deviceId }, select: { id: true, serialNumber: true, model: true, displayName: true, status: true, pairedAt: true, updatedAt: true } });
     });
   }
 
@@ -97,12 +97,12 @@ class DeviceService {
 
   async unpair(id: string, userId: string, revoke = false) {
     return deviceRepository.transaction(async (transaction) => {
-      const device = await transaction.device.findFirst({ where: { id, ownerId: userId, status: 'PAIRED' }, select: { id: true } });
+      const device = await transaction.msDevice.findFirst({ where: { id, ownerId: userId, status: 'PAIRED' }, select: { id: true } });
       if (!device) throw new Error('NOT_FOUND');
-      await transaction.deviceCredential.updateMany({ where: { deviceId: id, revokedAt: null }, data: { revokedAt: new Date() } });
-      await transaction.deviceCommand.updateMany({ where: { deviceId: id, status: { in: ['PENDING', 'ACKNOWLEDGED'] } }, data: { status: 'CANCELLED', updatedAt: new Date() } });
-      await transaction.deviceOtaDeployment.updateMany({ where: { deviceId: id, status: { in: [...activeOtaStatuses] } }, data: { status: 'CANCELLED', updatedAt: new Date() } });
-      return transaction.device.update({ where: { id }, data: { ownerId: null, status: revoke ? 'REVOKED' : 'UNPAIRED', unpairedAt: new Date(), revokedAt: revoke ? new Date() : null, pairedAt: null } });
+      await transaction.trDeviceCredential.updateMany({ where: { deviceId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+      await transaction.trDeviceCommand.updateMany({ where: { deviceId: id, status: { in: ['PENDING', 'ACKNOWLEDGED'] } }, data: { status: 'CANCELLED', updatedAt: new Date() } });
+      await transaction.trDeviceOtaDeployment.updateMany({ where: { deviceId: id, status: { in: [...activeOtaStatuses] } }, data: { status: 'CANCELLED', updatedAt: new Date() } });
+      return transaction.msDevice.update({ where: { id }, data: { ownerId: null, status: revoke ? 'REVOKED' : 'UNPAIRED', unpairedAt: new Date(), revokedAt: revoke ? new Date() : null, pairedAt: null } });
     });
   }
 
@@ -122,8 +122,8 @@ class DeviceService {
   async heartbeat(deviceId: string, body: HeartbeatDTO) {
     const now = new Date();
     return deviceRepository.transaction(async (transaction) => {
-      const device = await transaction.device.update({ where: { id: deviceId }, data: { lastSeenAt: now, firmwareVersion: body.firmwareVersion, hardwareRevision: body.hardwareRevision, bootloaderVersion: body.bootloaderVersion, protocolVersion: body.protocolVersion, supportedCommandTypes: body.supportedCommandTypes }, select: { id: true, lastSeenAt: true, firmwareVersion: true, hardwareRevision: true, bootloaderVersion: true, protocolVersion: true, supportedCommandTypes: true } });
-      await transaction.deviceTelemetry.create({ data: { deviceId, metric: 'heartbeat', value: 1, unit: 'event', recordedAt: now, metadata: { firmwareVersion: body.firmwareVersion, hardwareRevision: body.hardwareRevision, bootloaderVersion: body.bootloaderVersion, protocolVersion: body.protocolVersion } } });
+      const device = await transaction.msDevice.update({ where: { id: deviceId }, data: { lastSeenAt: now, firmwareVersion: body.firmwareVersion, hardwareRevision: body.hardwareRevision, bootloaderVersion: body.bootloaderVersion, protocolVersion: body.protocolVersion, supportedCommandTypes: body.supportedCommandTypes }, select: { id: true, lastSeenAt: true, firmwareVersion: true, hardwareRevision: true, bootloaderVersion: true, protocolVersion: true, supportedCommandTypes: true } });
+      await transaction.trDeviceTelemetry.create({ data: { deviceId, metric: 'heartbeat', value: 1, unit: 'event', recordedAt: now, metadata: { firmwareVersion: body.firmwareVersion, hardwareRevision: body.hardwareRevision, bootloaderVersion: body.bootloaderVersion, protocolVersion: body.protocolVersion } } });
       return device;
     });
   }
@@ -174,8 +174,8 @@ class DeviceService {
     if (existing) return existing;
     try {
       return await deviceRepository.transaction(async (transaction) => {
-        const mood = await transaction.mood.create({ data: { userId, state: body.state, intensity: body.intensity, triggers: body.triggers, note: body.note ?? null, createdAt: body.observedAt } });
-        return transaction.deviceCheckIn.create({ data: { deviceId, userId, moodId: mood.id, kind: body.kind, idempotencyKey: body.idempotencyKey, observedAt: body.observedAt }, include: { mood: true } });
+        const mood = await transaction.trMoodEntry.create({ data: { userId, state: body.state, intensity: body.intensity, triggers: body.triggers, note: body.note ?? null, createdAt: body.observedAt } });
+        return transaction.trDeviceCheckIn.create({ data: { deviceId, userId, moodId: mood.id, kind: body.kind, idempotencyKey: body.idempotencyKey, observedAt: body.observedAt }, include: { mood: true } });
       });
     } catch (error) {
       const concurrent = await deviceRepository.checkIn.findUnique({ where: { deviceId_idempotencyKey: { deviceId, idempotencyKey: body.idempotencyKey } }, include: { mood: true } });
@@ -237,8 +237,8 @@ class DeviceService {
     const transitions: Record<string, readonly string[]> = { PENDING: ['DOWNLOADING', 'FAILED'], DOWNLOADING: ['DOWNLOADING', 'INSTALLING', 'FAILED'], INSTALLING: ['INSTALLING', 'SUCCEEDED', 'FAILED'], SUCCEEDED: ['SUCCEEDED'], FAILED: ['FAILED'] };
     if (!transitions[ota.status]?.includes(status) || progress < ota.progress) throw new Error('INVALID_OTA_TRANSITION');
     return deviceRepository.transaction(async (transaction) => {
-      const updated = await transaction.deviceOtaDeployment.update({ where: { id: otaId }, data: { status, progress, errorCode: status === 'FAILED' ? errorCode ?? null : null, startedAt: ota.startedAt ?? new Date(), completedAt: status === 'SUCCEEDED' || status === 'FAILED' ? ota.completedAt ?? new Date() : null } });
-      if (status === 'SUCCEEDED') await transaction.device.update({ where: { id: deviceId }, data: { firmwareVersion: ota.firmware.version } });
+      const updated = await transaction.trDeviceOtaDeployment.update({ where: { id: otaId }, data: { status, progress, errorCode: status === 'FAILED' ? errorCode ?? null : null, startedAt: ota.startedAt ?? new Date(), completedAt: status === 'SUCCEEDED' || status === 'FAILED' ? ota.completedAt ?? new Date() : null } });
+      if (status === 'SUCCEEDED') await transaction.msDevice.update({ where: { id: deviceId }, data: { firmwareVersion: ota.firmware.version } });
       return updated;
     });
   }

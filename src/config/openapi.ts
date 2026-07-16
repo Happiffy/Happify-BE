@@ -93,7 +93,6 @@ export const openapiDocument: Record<string, unknown> = {
     '/voice/turns/{turnId}/audio': { get: authenticated('Voice', 'Get voice response audio', 'Streams generated response audio for a voice turn owned by the current user.', { parameters: [turnId], responses: { '200': { description: 'Audio bytes.', content: { 'audio/mpeg': { schema: { type: 'string', format: 'binary' } } } }, ...errors } }) },
     '/simulator/devices': { post: authenticated('Simulator', 'Register simulator device', 'Optional route: registered only when ENABLE_SIMULATOR_ROUTES=true. Role constraint: ADMIN only.', { requestBody: request({ $ref: '#/components/schemas/SimulatorDeviceInput' }), responses: { '201': response('Created.'), ...errors } }) },
     '/simulator/firmware': { post: authenticated('Simulator', 'Create simulator firmware', 'Optional route: registered only when ENABLE_SIMULATOR_ROUTES=true. Role constraint: ADMIN only.', { requestBody: request({ $ref: '#/components/schemas/FirmwareInput' }), responses: { '201': response('Created.'), ...errors } }) },
-  },
   components: {
     securitySchemes: { BearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'Firebase ID token' }, DeviceAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'Device runtime credential' } },
     schemas: {

@@ -58,15 +58,15 @@ class ProfileService {
   async reviewApplication(id: string, reviewerId: string, status: 'APPROVED' | 'REJECTED', reviewComment: string) {
     return profileRepository.transaction(async (transaction) => {
       if (reviewerId === undefined) throw new Error('FORBIDDEN');
-      const application = await transaction.psychologistApplication.findUnique({ where: { id }, select: { id: true, userId: true, status: true } });
+      const application = await transaction.trPsychologistApplication.findUnique({ where: { id }, select: { id: true, userId: true, status: true } });
       if (!application) throw new Error('NOT_FOUND');
       if (application.userId === reviewerId) throw new Error('FORBIDDEN');
       if (application.status !== 'PENDING') throw new Error('APPLICATION_ALREADY_REVIEWED');
-      const reviewed = await transaction.psychologistApplication.update({
+      const reviewed = await transaction.trPsychologistApplication.update({
         where: { id },
         data: { status, reviewComment, reviewedById: reviewerId, reviewedAt: new Date() },
       });
-      await transaction.user.update({ where: { id: application.userId }, data: { role: status === 'APPROVED' ? 'PSYCHOLOGIST' : 'USER' } });
+      await transaction.msUser.update({ where: { id: application.userId }, data: { role: status === 'APPROVED' ? 'PSYCHOLOGIST' : 'USER' } });
       return reviewed;
     });
   }
