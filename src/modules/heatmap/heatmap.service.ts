@@ -24,21 +24,26 @@ class HeatmapService {
   async list(query: HeatmapQuery) {
     const startDate = query.startDate ? utcDay(query.startDate) : utcDay(new Date(Date.now() - ((query.days ?? 7) - 1) * 86400000));
     const endDate = query.endDate ? utcDay(query.endDate) : utcDay();
-    const groups = await heatmapRepository.contribution.groupBy({
-      by: ['regionKey', 'mood'],
+    const contributions = await heatmapRepository.contribution.findMany({
       where: { bucketDate: { gte: startDate, lte: endDate } },
-      _count: { _all: true },
+      select: { userId: true, regionKey: true, mood: true },
     });
-    const regions = new Map<string, { count: number; moods: Record<string, number> }>();
-    for (const group of groups) {
-      const region = regions.get(group.regionKey) ?? { count: 0, moods: {} };
-      region.count += group._count._all;
-      region.moods[group.mood] = group._count._all;
-      regions.set(group.regionKey, region);
+    const regions = new Map<string, { users: Set<string>; moods: Record<string, Set<string>> }>();
+    for (const contribution of contributions) {
+      const region = regions.get(contribution.regionKey) ?? { users: new Set<string>(), moods: {} };
+      region.users.add(contribution.userId);
+      const moodUsers = region.moods[contribution.mood] ?? new Set<string>();
+      moodUsers.add(contribution.userId);
+      region.moods[contribution.mood] = moodUsers;
+      regions.set(contribution.regionKey, region);
     }
     return [...regions.entries()]
-      .filter(([, value]) => value.count >= minimumCohort)
-      .map(([regionKey, value]) => ({ regionKey, count: value.count, moods: value.moods }))
+      .filter(([, value]) => value.users.size >= minimumCohort)
+      .map(([regionKey, value]) => ({
+        regionKey,
+        count: value.users.size,
+        moods: Object.fromEntries(Object.entries(value.moods).map(([mood, users]) => [mood, users.size])),
+      }))
       .sort((a, b) => b.count - a.count);
   }
 }

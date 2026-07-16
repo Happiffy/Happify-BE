@@ -184,16 +184,16 @@ async function main() {
     await tx.trHeatmapContribution.deleteMany({ where: { userId: { in: communityUserIds }, bucketDate: todayUtc } });
     await tx.trHeatmapContribution.createMany({
       data: [
-        { userId: user.id, regionKey: 'jakarta-selatan', mood: 'NEUTRAL', bucketDate: todayUtc },
-        { userId: communityOne.id, regionKey: 'jakarta-selatan', mood: 'CALM', bucketDate: todayUtc },
-        { userId: communityTwo.id, regionKey: 'jakarta-selatan', mood: 'CALM', bucketDate: todayUtc },
-        { userId: communityThree.id, regionKey: 'jakarta-selatan', mood: 'HAPPY', bucketDate: todayUtc },
-        { userId: communityFour.id, regionKey: 'jakarta-selatan', mood: 'NEUTRAL', bucketDate: todayUtc },
-        { userId: communityFive.id, regionKey: 'jakarta-pusat', mood: 'ANXIOUS', bucketDate: todayUtc },
-        { userId: communitySix.id, regionKey: 'jakarta-pusat', mood: 'NEUTRAL', bucketDate: todayUtc },
-        { userId: communitySeven.id, regionKey: 'jakarta-pusat', mood: 'HAPPY', bucketDate: todayUtc },
-        { userId: communityEight.id, regionKey: 'jakarta-pusat', mood: 'CALM', bucketDate: todayUtc },
-        { userId: communityNine.id, regionKey: 'jakarta-pusat', mood: 'ANXIOUS', bucketDate: todayUtc },
+        { userId: user.id, regionKey: 'GS62_E1068', mood: 'NEUTRAL', bucketDate: todayUtc },
+        { userId: communityOne.id, regionKey: 'GS62_E1068', mood: 'CALM', bucketDate: todayUtc },
+        { userId: communityTwo.id, regionKey: 'GS62_E1068', mood: 'CALM', bucketDate: todayUtc },
+        { userId: communityThree.id, regionKey: 'GS62_E1068', mood: 'HAPPY', bucketDate: todayUtc },
+        { userId: communityFour.id, regionKey: 'GS62_E1068', mood: 'NEUTRAL', bucketDate: todayUtc },
+        { userId: communityFive.id, regionKey: 'GS61_E1068', mood: 'ANXIOUS', bucketDate: todayUtc },
+        { userId: communitySix.id, regionKey: 'GS61_E1068', mood: 'NEUTRAL', bucketDate: todayUtc },
+        { userId: communitySeven.id, regionKey: 'GS61_E1068', mood: 'HAPPY', bucketDate: todayUtc },
+        { userId: communityEight.id, regionKey: 'GS61_E1068', mood: 'CALM', bucketDate: todayUtc },
+        { userId: communityNine.id, regionKey: 'GS61_E1068', mood: 'ANXIOUS', bucketDate: todayUtc },
       ],
     });
 

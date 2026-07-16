@@ -30,7 +30,7 @@ class CommunityService {
     const content = sanitizeRichText(body.content);
     if (!richTextToPlainText(content)) throw new Error('INVALID_CONTENT');
     const post = await communityRepository.communityPost.create({
-      data: { userId, alias: 'Anonymous', content, imageUrl: body.imageUrl ?? null, mood: body.mood ?? null },
+      data: { userId, alias: body.alias, content, imageUrl: body.imageUrl ?? null, mood: body.mood ?? null },
     });
     const publicPost = toPublicPost(post);
     broadcast('community', { type: 'community:post', post: publicPost });
