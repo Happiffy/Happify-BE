@@ -1,5 +1,5 @@
 import deviceRepository from '@/modules/device/device.repository.js';
-import { issueRuntimeCredential, verifyClaimSecret } from '@/modules/device/claim-secret.util.js';
+import { createClaimSecretDigest, issueRuntimeCredential, verifyClaimSecret } from '@/modules/device/claim-secret.util.js';
 import type { DeviceCommandType, Prisma } from '@/generated/prisma/client.js';
 import { isFirmwareCompatible } from '@/modules/device/firmware-compatibility.js';
 import type { EmotionObservationDTO, HeartbeatDTO, MoodSyncDTO } from '@/modules/device/device.validation.js';
@@ -9,6 +9,36 @@ const observationRetentionDays = Number(process.env.DEVICE_OBSERVATION_RETENTION
 const activeOtaStatuses = ['PENDING', 'DOWNLOADING', 'INSTALLING'] as const;
 
 class DeviceService {
+  async ensureCompanion(userId: string) {
+    const serialNumber = `HAPPIFY-${userId.slice(-12).toUpperCase()}`;
+    return deviceRepository.device.upsert({
+      where: { serialNumber },
+      update: {
+        ownerId: userId,
+        status: 'PAIRED',
+        pairedAt: new Date(),
+        unpairedAt: null,
+        revokedAt: null,
+      },
+      create: {
+        serialNumber,
+        model: 'Happify Companion',
+        displayName: 'My Happify Companion',
+        claimSecretDigest: createClaimSecretDigest(`companion:${userId}`),
+        ownerId: userId,
+        status: 'PAIRED',
+        pairedAt: new Date(),
+        supportedCommandTypes: [
+          'HAPTIC_THERAPY',
+          'DISPLAY_MESSAGE',
+          'SET_CONFIGURATION',
+          'RESTART',
+        ],
+      },
+      select: { id: true, serialNumber: true, model: true, displayName: true, status: true, pairedAt: true, lastSeenAt: true, firmwareVersion: true, hardwareRevision: true, bootloaderVersion: true, protocolVersion: true, supportedCommandTypes: true, updatedAt: true },
+    });
+  }
+
   list(userId: string) {
     return deviceRepository.device.findMany({
       where: { ownerId: userId },

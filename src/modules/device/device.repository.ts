@@ -1,17 +1,17 @@
 import prisma from '@/config/prisma.js';
 
 class DeviceRepository {
-  get device() { return prisma.device; }
-  get pairingSession() { return prisma.devicePairingSession; }
-  get credential() { return prisma.deviceCredential; }
-  get telemetry() { return prisma.deviceTelemetry; }
-  get emotionObservation() { return prisma.deviceEmotionObservation; }
-  get checkIn() { return prisma.deviceCheckIn; }
-  get command() { return prisma.deviceCommand; }
-  get firmware() { return prisma.firmwareRelease; }
-  get ota() { return prisma.deviceOtaDeployment; }
-  get consent() { return prisma.userConsent; }
-  get consentDocument() { return prisma.consentDocument; }
+  get device() { return prisma.msDevice; }
+  get pairingSession() { return prisma.trDevicePairingSession; }
+  get credential() { return prisma.trDeviceCredential; }
+  get telemetry() { return prisma.trDeviceTelemetry; }
+  get emotionObservation() { return prisma.trDeviceEmotionObservation; }
+  get checkIn() { return prisma.trDeviceCheckIn; }
+  get command() { return prisma.trDeviceCommand; }
+  get firmware() { return prisma.msFirmwareRelease; }
+  get ota() { return prisma.trDeviceOtaDeployment; }
+  get consent() { return prisma.trUserConsent; }
+  get consentDocument() { return prisma.msConsentDocument; }
   transaction<T>(callback: (transaction: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => Promise<T>) { return prisma.$transaction(callback); }
 }
 

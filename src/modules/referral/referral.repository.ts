@@ -1,13 +1,13 @@
 import prisma from '@/config/prisma.js';
 
 class ReferralRepository {
-  get referral() { return prisma.referral; }
-  get careChatSession() { return prisma.careChatSession; }
-  get careChatMessage() { return prisma.careChatMessage; }
-  get user() { return prisma.user; }
-  get mood() { return prisma.mood; }
-  get journalEntry() { return prisma.journalEntry; }
-  get userPreference() { return prisma.userPreference; }
+  get referral() { return prisma.trReferral; }
+  get careChatSession() { return prisma.trCareChatSession; }
+  get careChatMessage() { return prisma.trCareChatMessage; }
+  get user() { return prisma.msUser; }
+  get mood() { return prisma.trMoodEntry; }
+  get journalEntry() { return prisma.trJournalEntry; }
+  get userPreference() { return prisma.msUserPreference; }
 }
 
 export default new ReferralRepository();

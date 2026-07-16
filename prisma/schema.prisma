@@ -23,13 +23,6 @@ enum RiskLevel {
   CRISIS
 }
 
-enum UserRole {
-  USER
-  PSYCHOLOGIST
-  MODERATOR
-  ADMIN
-}
-
 enum ApplicationStatus {
   PENDING
   APPROVED
@@ -165,64 +158,70 @@ enum OtaStatus {
   CANCELLED
 }
 
-model User {
-  id                       String                     @id @default(cuid())
-  firebaseUid              String                     @unique
-  email                    String?                    @unique
+model MsRole {
+  code  String   @id
+  users MsUser[]
+}
+
+model MsUser {
+  id                       String                       @id @default(cuid())
+  firebaseUid              String                       @unique
+  email                    String?                      @unique
   displayName              String?
-  role                     UserRole                   @default(USER)
+  role                     String                       @default("USER")
+  roleRecord               MsRole                       @relation(fields: [role], references: [code], onDelete: Restrict)
   avatarUrl                String?
   bio                      String?
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @updatedAt
-  moods                    Mood[]
-  journals                 JournalEntry[]
-  posts                    CommunityPost[]
-  comments                 CommunityComment[]
-  communitySupports        CommunitySupport[]
-  communityReports         CommunityReport[]          @relation("CommunityReporter")
-  moderationAudits         CommunityModerationAudit[]
-  moodGeoPoints            MoodGeoPoint[]
-  heatmapContributions     HeatmapContribution[]
-  referrals                Referral[]
-  reviewedReferrals        Referral[]                 @relation("ReferralPsychologist")
-  careChatSessions         CareChatSession[]          @relation("CareChatUser")
-  psychologistChatSessions CareChatSession[]          @relation("CareChatPsychologist")
-  careChatMessages         CareChatMessage[]
-  preference               UserPreference?
-  psychologistApplication  PsychologistApplication?
-  fcmTokens                FcmToken[]
-  devices                  Device[]
-  devicePairingSessions    DevicePairingSession[]
-  voiceTurns               VoiceTurn[]
-  consents                 UserConsent[]
-  mindfulnessProgress      MindfulnessProgress[]
-  emergencyContacts        EmergencyContact[]
-  emotionObservations      DeviceEmotionObservation[]
-  deviceCheckIns           DeviceCheckIn[]
-  reviewedApplications     PsychologistApplication[]  @relation("PsychologistApplicationReviewer")
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt
+  moods                    TrMoodEntry[]
+  journals                 TrJournalEntry[]
+  posts                    TrCommunityPost[]
+  comments                 TrCommunityComment[]
+  communitySupports        TrCommunitySupport[]
+  communityReports         TrCommunityReport[]          @relation("CommunityReporter")
+  moderationAudits         TrCommunityModerationAudit[]
+  moodGeoPoints            TrMoodGeoPoint[]
+  heatmapContributions     TrHeatmapContribution[]
+  referrals                TrReferral[]                 @relation("ReferralUser")
+  reviewedReferrals        TrReferral[]                 @relation("ReferralPsychologist")
+  careChatSessions         TrCareChatSession[]          @relation("CareChatUser")
+  psychologistChatSessions TrCareChatSession[]          @relation("CareChatPsychologist")
+  careChatMessages         TrCareChatMessage[]
+  preference               MsUserPreference?
+  psychologistApplication  TrPsychologistApplication?   @relation("PsychologistApplicationUser")
+  fcmTokens                TrFcmToken[]
+  devices                  MsDevice[]
+  devicePairingSessions    TrDevicePairingSession[]
+  voiceTurns               TrVoiceTurn[]
+  consents                 TrUserConsent[]
+  mindfulnessProgress      TrMindfulnessProgress[]
+  emergencyContacts        MsEmergencyContact[]
+  emotionObservations      TrDeviceEmotionObservation[]
+  deviceCheckIns           TrDeviceCheckIn[]            @relation("DeviceCheckInUser")
+  reviewedApplications     TrPsychologistApplication[]  @relation("PsychologistApplicationReviewer")
 
   @@index([role])
   @@index([createdAt])
 }
 
-model ConsentDocument {
-  id          String        @id @default(cuid())
+model MsConsentDocument {
+  id          String          @id @default(cuid())
   scope       ConsentScope
   version     Int
   title       String
   content     String
-  isActive    Boolean       @default(true)
+  isActive    Boolean         @default(true)
   effectiveAt DateTime
-  createdAt   DateTime      @default(now())
-  consents    UserConsent[]
+  createdAt   DateTime        @default(now())
+  consents    TrUserConsent[]
 
   @@unique([scope, version])
   @@index([scope, isActive, effectiveAt])
 }
 
-model UserConsent {
-  id           String                     @id @default(cuid())
+model TrUserConsent {
+  id           String                       @id @default(cuid())
   userId       String
   documentId   String
   scope        ConsentScope
@@ -231,18 +230,18 @@ model UserConsent {
   acceptedAt   DateTime?
   revokedAt    DateTime?
   source       String
-  createdAt    DateTime                   @default(now())
-  updatedAt    DateTime                   @updatedAt
-  user         User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  document     ConsentDocument            @relation(fields: [documentId], references: [id], onDelete: Restrict)
-  observations DeviceEmotionObservation[]
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+  user         MsUser                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document     MsConsentDocument            @relation(fields: [documentId], references: [id], onDelete: Restrict)
+  observations TrDeviceEmotionObservation[]
 
   @@unique([userId, documentId])
   @@index([userId, scope, status, updatedAt])
   @@index([documentId])
 }
 
-model FcmToken {
+model TrFcmToken {
   id         String   @id @default(cuid())
   userId     String
   token      String   @unique
@@ -250,19 +249,19 @@ model FcmToken {
   lastSeenAt DateTime @default(now())
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       MsUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-model Device {
-  id                    String                     @id @default(cuid())
-  serialNumber          String                     @unique
+model MsDevice {
+  id                    String                       @id @default(cuid())
+  serialNumber          String                       @unique
   model                 String
   displayName           String?
   claimSecretDigest     String
   ownerId               String?
-  status                DeviceStatus               @default(UNPAIRED)
+  status                DeviceStatus                 @default(UNPAIRED)
   pairedAt              DateTime?
   unpairedAt            DateTime?
   revokedAt             DateTime?
@@ -271,23 +270,23 @@ model Device {
   hardwareRevision      String?
   bootloaderVersion     String?
   protocolVersion       String?
-  supportedCommandTypes DeviceCommandType[]        @default([])
-  createdAt             DateTime                   @default(now())
-  updatedAt             DateTime                   @updatedAt
-  owner                 User?                      @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  pairingSessions       DevicePairingSession[]
-  credentials           DeviceCredential[]
-  telemetry             DeviceTelemetry[]
-  commands              DeviceCommand[]
-  otaDeployments        DeviceOtaDeployment[]
-  emotionObservations   DeviceEmotionObservation[]
-  checkIns              DeviceCheckIn[]
+  supportedCommandTypes DeviceCommandType[]          @default([])
+  createdAt             DateTime                     @default(now())
+  updatedAt             DateTime                     @updatedAt
+  owner                 MsUser?                      @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  pairingSessions       TrDevicePairingSession[]
+  credentials           TrDeviceCredential[]
+  telemetry             TrDeviceTelemetry[]
+  commands              TrDeviceCommand[]
+  otaDeployments        TrDeviceOtaDeployment[]
+  emotionObservations   TrDeviceEmotionObservation[]
+  checkIns              TrDeviceCheckIn[]
 
   @@index([ownerId, updatedAt])
   @@index([status])
 }
 
-model DevicePairingSession {
+model TrDevicePairingSession {
   id          String              @id @default(cuid())
   deviceId    String
   userId      String
@@ -295,15 +294,15 @@ model DevicePairingSession {
   expiresAt   DateTime
   completedAt DateTime?
   createdAt   DateTime            @default(now())
-  device      Device              @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device      MsDevice            @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user        MsUser              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([deviceId, status])
   @@index([status, expiresAt])
 }
 
-model DeviceCredential {
+model TrDeviceCredential {
   id          String    @id @default(cuid())
   deviceId    String
   tokenDigest String    @unique
@@ -311,12 +310,12 @@ model DeviceCredential {
   lastUsedAt  DateTime?
   revokedAt   DateTime?
   createdAt   DateTime  @default(now())
-  device      Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  device      MsDevice  @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@index([deviceId, revokedAt, expiresAt])
 }
 
-model DeviceTelemetry {
+model TrDeviceTelemetry {
   id         String   @id @default(cuid())
   deviceId   String
   metric     String
@@ -325,13 +324,13 @@ model DeviceTelemetry {
   recordedAt DateTime
   receivedAt DateTime @default(now())
   metadata   Json?
-  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  device     MsDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@index([deviceId, recordedAt])
   @@index([metric, recordedAt])
 }
 
-model DeviceEmotionObservation {
+model TrDeviceEmotionObservation {
   id                      String                     @id @default(cuid())
   deviceId                String
   userId                  String
@@ -353,9 +352,9 @@ model DeviceEmotionObservation {
   idempotencyKey          String
   observedAt              DateTime
   receivedAt              DateTime                   @default(now())
-  device                  Device                     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user                    User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  consent                 UserConsent                @relation(fields: [consentId], references: [id], onDelete: Restrict)
+  device                  MsDevice                   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user                    MsUser                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consent                 TrUserConsent              @relation(fields: [consentId], references: [id], onDelete: Restrict)
 
   @@unique([deviceId, idempotencyKey])
   @@index([deviceId, observedAt])
@@ -363,7 +362,7 @@ model DeviceEmotionObservation {
   @@index([retainUntil])
 }
 
-model DeviceCheckIn {
+model TrDeviceCheckIn {
   id             String            @id @default(cuid())
   deviceId       String
   userId         String
@@ -372,15 +371,15 @@ model DeviceCheckIn {
   idempotencyKey String
   observedAt     DateTime
   receivedAt     DateTime          @default(now())
-  device         Device            @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mood           Mood              @relation(fields: [moodId], references: [id], onDelete: Cascade)
+  device         MsDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user           MsUser            @relation("DeviceCheckInUser", fields: [userId], references: [id], onDelete: Cascade)
+  mood           TrMoodEntry       @relation(fields: [moodId], references: [id], onDelete: Cascade)
 
   @@unique([deviceId, idempotencyKey])
   @@index([userId, observedAt])
 }
 
-model DeviceCommand {
+model TrDeviceCommand {
   id             String              @id @default(cuid())
   deviceId       String
   type           DeviceCommandType
@@ -392,14 +391,14 @@ model DeviceCommand {
   errorCode      String?
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
-  device         Device              @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  device         MsDevice            @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@unique([deviceId, idempotencyKey])
   @@index([deviceId, status, createdAt])
 }
 
-model FirmwareRelease {
-  id                       String                @id @default(cuid())
+model MsFirmwareRelease {
+  id                       String                  @id @default(cuid())
   model                    String
   version                  String
   hardwareRevision         String?
@@ -408,34 +407,34 @@ model FirmwareRelease {
   downloadUrl              String
   checksumSha256           String
   releaseNotes             String?
-  status                   FirmwareStatus        @default(ACTIVE)
-  createdAt                DateTime              @default(now())
-  otaDeployments           DeviceOtaDeployment[]
+  status                   FirmwareStatus          @default(ACTIVE)
+  createdAt                DateTime                @default(now())
+  otaDeployments           TrDeviceOtaDeployment[]
 
   @@unique([model, version])
   @@index([model, status, createdAt])
 }
 
-model DeviceOtaDeployment {
-  id          String          @id @default(cuid())
+model TrDeviceOtaDeployment {
+  id          String            @id @default(cuid())
   deviceId    String
   firmwareId  String
-  status      OtaStatus       @default(PENDING)
-  progress    Int             @default(0)
+  status      OtaStatus         @default(PENDING)
+  progress    Int               @default(0)
   errorCode   String?
   startedAt   DateTime?
   completedAt DateTime?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  device      Device          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  firmware    FirmwareRelease @relation(fields: [firmwareId], references: [id], onDelete: Restrict)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  device      MsDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  firmware    MsFirmwareRelease @relation(fields: [firmwareId], references: [id], onDelete: Restrict)
 
   @@index([deviceId, status, createdAt])
   @@index([firmwareId])
 }
 
-model VoiceTurn {
-  id                String     @id @default(cuid())
+model TrVoiceTurn {
+  id                String      @id @default(cuid())
   userId            String
   sessionId         String?
   idempotencyKey    String?
@@ -448,10 +447,10 @@ model VoiceTurn {
   upstreamRequestId String?
   upstreamAudioPath String?
   audioExpiresAt    DateTime?
-  referralId        String?    @unique
-  createdAt         DateTime   @default(now())
-  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referral          Referral?  @relation(fields: [referralId], references: [id], onDelete: SetNull)
+  referralId        String?     @unique
+  createdAt         DateTime    @default(now())
+  user              MsUser      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referral          TrReferral? @relation(fields: [referralId], references: [id], onDelete: SetNull)
 
   @@unique([userId, idempotencyKey])
   @@index([userId, sessionId, createdAt])
@@ -461,22 +460,22 @@ model VoiceTurn {
   @@index([audioExpiresAt])
 }
 
-model Mood {
-  id            String         @id @default(cuid())
+model TrMoodEntry {
+  id            String           @id @default(cuid())
   userId        String
   state         MoodState
-  intensity     Int            @default(3)
-  triggers      String[]       @default([])
+  intensity     Int              @default(3)
+  triggers      String[]         @default([])
   note          String?
-  createdAt     DateTime       @default(now())
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deviceCheckIn DeviceCheckIn?
+  createdAt     DateTime         @default(now())
+  user          MsUser           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceCheckIn TrDeviceCheckIn?
 
   @@index([userId, createdAt])
   @@index([state, createdAt])
 }
 
-model JournalEntry {
+model TrJournalEntry {
   id           String     @id @default(cuid())
   userId       String
   title        String
@@ -487,61 +486,61 @@ model JournalEntry {
   aiReflection String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         MsUser     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([riskLevel, createdAt])
 }
 
-model CommunityPost {
-  id           String             @id @default(cuid())
+model TrCommunityPost {
+  id           String               @id @default(cuid())
   userId       String?
-  alias        String             @default("Anonymous")
+  alias        String               @default("Anonymous")
   content      String
   imageUrl     String?
   mood         MoodState?
-  supportCount Int                @default(0)
-  isHidden     Boolean            @default(false)
-  createdAt    DateTime           @default(now())
-  user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  supports     CommunitySupport[]
-  comments     CommunityComment[]
-  reports      CommunityReport[]
+  supportCount Int                  @default(0)
+  isHidden     Boolean              @default(false)
+  createdAt    DateTime             @default(now())
+  user         MsUser?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  supports     TrCommunitySupport[]
+  comments     TrCommunityComment[]
+  reports      TrCommunityReport[]
 
   @@index([createdAt])
   @@index([isHidden, createdAt])
 }
 
-model CommunitySupport {
-  id        String        @id @default(cuid())
+model TrCommunitySupport {
+  id        String          @id @default(cuid())
   userId    String
   postId    String
-  createdAt DateTime      @default(now())
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
+  user      MsUser          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      TrCommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@index([postId])
 }
 
-model CommunityComment {
-  id        String            @id @default(cuid())
+model TrCommunityComment {
+  id        String              @id @default(cuid())
   postId    String
   userId    String?
-  alias     String            @default("Anonymous")
+  alias     String              @default("Anonymous")
   content   String
   imageUrl  String?
-  isHidden  Boolean           @default(false)
-  createdAt DateTime          @default(now())
-  post      CommunityPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
-  reports   CommunityReport[]
+  isHidden  Boolean             @default(false)
+  createdAt DateTime            @default(now())
+  post      TrCommunityPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      MsUser?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reports   TrCommunityReport[]
 
   @@index([postId, createdAt])
   @@index([isHidden, createdAt])
 }
 
-model CommunityReport {
+model TrCommunityReport {
   id         String                @id @default(cuid())
   reporterId String
   targetType CommunityTargetType
@@ -554,9 +553,9 @@ model CommunityReport {
   resolvedAt DateTime?
   createdAt  DateTime              @default(now())
   updatedAt  DateTime              @updatedAt
-  reporter   User                  @relation("CommunityReporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  post       CommunityPost?        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  comment    CommunityComment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporter   MsUser                @relation("CommunityReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  post       TrCommunityPost?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment    TrCommunityComment?   @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([reporterId, targetType, targetId])
   @@index([status, createdAt])
@@ -564,7 +563,7 @@ model CommunityReport {
   @@index([commentId])
 }
 
-model CommunityModerationAudit {
+model TrCommunityModerationAudit {
   id          String              @id @default(cuid())
   moderatorId String
   action      ModerationAction
@@ -574,14 +573,14 @@ model CommunityModerationAudit {
   reason      String
   metadata    Json?
   createdAt   DateTime            @default(now())
-  moderator   User                @relation(fields: [moderatorId], references: [id], onDelete: Restrict)
+  moderator   MsUser              @relation(fields: [moderatorId], references: [id], onDelete: Restrict)
 
   @@index([moderatorId, createdAt])
   @@index([targetType, targetId, createdAt])
   @@index([reportId])
 }
 
-model MoodGeoPoint {
+model TrMoodGeoPoint {
   id          String    @id @default(cuid())
   userId      String?
   regionLabel String
@@ -589,13 +588,13 @@ model MoodGeoPoint {
   longitude   Float
   mood        MoodState
   createdAt   DateTime  @default(now())
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user        MsUser?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([regionLabel, createdAt])
   @@index([mood, createdAt])
 }
 
-model HeatmapContribution {
+model TrHeatmapContribution {
   id         String    @id @default(cuid())
   userId     String
   regionKey  String
@@ -603,13 +602,13 @@ model HeatmapContribution {
   bucketDate DateTime
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       MsUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bucketDate])
   @@index([regionKey, bucketDate, mood])
 }
 
-model UserPreference {
+model MsUserPreference {
   id                    String                 @id @default(cuid())
   userId                String                 @unique
   primaryGoal           String
@@ -624,14 +623,14 @@ model UserPreference {
   consentToAi           Boolean                @default(false)
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
-  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  MsUser                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([primaryGoal])
   @@index([supportTone])
 }
 
-model Referral {
-  id                 String           @id @default(cuid())
+model TrReferral {
+  id                 String             @id @default(cuid())
   userId             String
   riskLevel          RiskLevel
   reason             String
@@ -640,15 +639,15 @@ model Referral {
   providerName       String?
   providerType       String?
   contactUrl         String?
-  status             ReferralStatus   @default(PENDING)
+  status             ReferralStatus     @default(PENDING)
   reviewerComment    String?
   psychologistId     String?
   reviewedAt         DateTime?
-  createdAt          DateTime         @default(now())
-  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  psychologist       User?            @relation("ReferralPsychologist", fields: [psychologistId], references: [id], onDelete: SetNull)
-  chatSession        CareChatSession?
-  voiceTurn          VoiceTurn?
+  createdAt          DateTime           @default(now())
+  user               MsUser             @relation("ReferralUser", fields: [userId], references: [id], onDelete: Cascade)
+  psychologist       MsUser?            @relation("ReferralPsychologist", fields: [psychologistId], references: [id], onDelete: SetNull)
+  chatSession        TrCareChatSession?
+  voiceTurn          TrVoiceTurn?
 
   @@index([userId, createdAt])
   @@index([psychologistId, createdAt])
@@ -656,7 +655,7 @@ model Referral {
   @@index([status, createdAt])
 }
 
-model PsychologistApplication {
+model TrPsychologistApplication {
   id             String            @id @default(cuid())
   userId         String            @unique
   fullName       String
@@ -670,48 +669,48 @@ model PsychologistApplication {
   reviewedAt     DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
-  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer       User?             @relation("PsychologistApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  user           MsUser            @relation("PsychologistApplicationUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer       MsUser?           @relation("PsychologistApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([reviewedById, reviewedAt])
 }
 
-model CareChatSession {
-  id             String            @id @default(cuid())
-  referralId     String            @unique
+model TrCareChatSession {
+  id             String              @id @default(cuid())
+  referralId     String              @unique
   userId         String
   psychologistId String
-  status         ChatSessionStatus @default(OPEN)
+  status         ChatSessionStatus   @default(OPEN)
   summary        String?
   closedAt       DateTime?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  referral       Referral          @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  user           User              @relation("CareChatUser", fields: [userId], references: [id], onDelete: Cascade)
-  psychologist   User              @relation("CareChatPsychologist", fields: [psychologistId], references: [id], onDelete: Cascade)
-  messages       CareChatMessage[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  referral       TrReferral          @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  user           MsUser              @relation("CareChatUser", fields: [userId], references: [id], onDelete: Cascade)
+  psychologist   MsUser              @relation("CareChatPsychologist", fields: [psychologistId], references: [id], onDelete: Cascade)
+  messages       TrCareChatMessage[]
 
   @@index([userId, updatedAt])
   @@index([psychologistId, updatedAt])
 }
 
-model CareChatMessage {
-  id        String          @id @default(cuid())
+model TrCareChatMessage {
+  id        String            @id @default(cuid())
   sessionId String
   senderId  String
   content   String
   imageUrl  String?
   readAt    DateTime?
-  createdAt DateTime        @default(now())
-  session   CareChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sender    User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt DateTime          @default(now())
+  session   TrCareChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender    MsUser            @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt])
   @@index([senderId, createdAt])
 }
 
-model DailyMotivation {
+model MsDailyMotivation {
   id        String   @id @default(cuid())
   date      DateTime @db.Date
   locale    String
@@ -723,24 +722,24 @@ model DailyMotivation {
   @@index([locale, date])
 }
 
-model MindfulnessActivity {
-  id              String                @id @default(cuid())
-  slug            String                @unique
+model MsMindfulnessActivity {
+  id              String                  @id @default(cuid())
+  slug            String                  @unique
   type            MindfulnessType
   title           String
   description     String
   durationSeconds Int
   locale          String
   steps           String[]
-  isPublished     Boolean               @default(true)
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  progress        MindfulnessProgress[]
+  isPublished     Boolean                 @default(true)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  progress        TrMindfulnessProgress[]
 
   @@index([locale, isPublished, type])
 }
 
-model MindfulnessProgress {
+model TrMindfulnessProgress {
   id              String                    @id @default(cuid())
   userId          String
   activityId      String
@@ -749,14 +748,14 @@ model MindfulnessProgress {
   startedAt       DateTime                  @default(now())
   completedAt     DateTime?
   updatedAt       DateTime                  @updatedAt
-  user            User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  activity        MindfulnessActivity       @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user            MsUser                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity        MsMindfulnessActivity     @relation(fields: [activityId], references: [id], onDelete: Cascade)
 
   @@unique([userId, activityId])
   @@index([userId, updatedAt])
 }
 
-model EmergencyContact {
+model MsEmergencyContact {
   id           String   @id @default(cuid())
   userId       String
   name         String
@@ -765,12 +764,12 @@ model EmergencyContact {
   isPrimary    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         MsUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isPrimary, createdAt])
 }
 
-model Provider {
+model MsProvider {
   id          String       @id @default(cuid())
   slug        String       @unique
   name        String

@@ -1,7 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { UserRole } from '@/generated/prisma/enums.js';
 import { firebaseAuth } from '@/config/firebase.js';
 import authRepository from '@/modules/auth/auth.repository.js';
+
+export type UserRole = 'USER' | 'PSYCHOLOGIST' | 'MODERATOR' | 'ADMIN';
 
 export type AuthUser = {
   id: string;
@@ -9,13 +10,17 @@ export type AuthUser = {
   role: UserRole;
 };
 
+function isUserRole(role: string): role is UserRole {
+  return ['USER', 'PSYCHOLOGIST', 'MODERATOR', 'ADMIN'].includes(role);
+}
+
 export async function authenticateToken(token: string): Promise<AuthUser> {
   const decodedToken = await firebaseAuth.verifyIdToken(token, true);
   const user = await authRepository.user.findUnique({
     where: { firebaseUid: decodedToken.uid },
     select: { id: true, firebaseUid: true, role: true },
   });
-  if (!user) throw new Error('ACCOUNT_NOT_REGISTERED');
+  if (!user || !isUserRole(user.role)) throw new Error('ACCOUNT_NOT_REGISTERED');
   return user;
 }
 

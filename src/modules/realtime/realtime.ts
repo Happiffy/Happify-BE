@@ -44,12 +44,12 @@ async function authorizeChannel(user: AuthUser, channel: string) {
   if (channel === `user:${user.id}:care`) return true;
   const match = channel.match(/^care-chat:([a-z0-9]+)$/);
   if (!match?.[1]) return false;
-  const session = await prisma.careChatSession.findFirst({ where: { id: match[1], OR: [{ userId: user.id }, { psychologistId: user.id }] }, select: { id: true } });
+  const session = await prisma.trCareChatSession.findFirst({ where: { id: match[1], OR: [{ userId: user.id }, { psychologistId: user.id }] }, select: { id: true } });
   return Boolean(session);
 }
 
 async function requireChatMembership(userId: string, sessionId: string) {
-  return prisma.careChatSession.findFirst({ where: { id: sessionId, OR: [{ userId }, { psychologistId: userId }] }, select: { id: true } });
+  return prisma.trCareChatSession.findFirst({ where: { id: sessionId, OR: [{ userId }, { psychologistId: userId }] }, select: { id: true } });
 }
 
 export function attachRealtimeServer(server: Server) {
@@ -96,7 +96,7 @@ export function attachRealtimeServer(server: Server) {
         if (type === 'care-chat:read') {
           const message = readMessageSchema.parse(raw);
           if (!await requireChatMembership(user.id, message.sessionId)) throw new Error('FORBIDDEN');
-          const updated = await prisma.careChatMessage.updateMany({ where: { id: message.messageId, sessionId: message.sessionId, senderId: { not: user.id }, readAt: null }, data: { readAt: new Date() } });
+          const updated = await prisma.trCareChatMessage.updateMany({ where: { id: message.messageId, sessionId: message.sessionId, senderId: { not: user.id }, readAt: null }, data: { readAt: new Date() } });
           if (updated.count !== 1) throw new Error('NOT_FOUND');
           broadcast(`care-chat:${message.sessionId}`, { ...message, userId: user.id, readAt: new Date().toISOString() });
           return;

@@ -18,14 +18,14 @@ export function summarizeVoiceMoodPattern(turns: ReadonlyArray<{ detectedMood: s
 class AnalyticsService {
   async getDashboard(userId: string) {
     const [profile, moods, journals, communityPosts, referrals, heatmapPoints, riskGroups, voiceTurns] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, include: { psychologistApplication: true } }),
-      prisma.mood.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 14 }),
-      prisma.journalEntry.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 5 }),
-      prisma.communityPost.count({ where: { userId } }),
-      prisma.referral.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 5 }),
-      prisma.moodGeoPoint.count(),
-      prisma.journalEntry.groupBy({ by: ['riskLevel'], where: { userId }, _count: { riskLevel: true } }),
-      prisma.voiceTurn.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 30, select: { detectedMood: true } }),
+      prisma.msUser.findUnique({ where: { id: userId }, include: { psychologistApplication: true } }),
+      prisma.trMoodEntry.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 14 }),
+      prisma.trJournalEntry.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 5 }),
+      prisma.trCommunityPost.count({ where: { userId } }),
+      prisma.trReferral.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 5 }),
+      prisma.trMoodGeoPoint.count(),
+      prisma.trJournalEntry.groupBy({ by: ['riskLevel'], where: { userId }, _count: { riskLevel: true } }),
+      prisma.trVoiceTurn.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: 30, select: { detectedMood: true } }),
     ]);
 
     return {

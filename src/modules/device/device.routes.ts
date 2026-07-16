@@ -15,6 +15,7 @@ router.get('/runtime/ota', requireDeviceAuth, deviceController.pendingOta.bind(d
 router.patch('/runtime/ota/:id', requireDeviceAuth, deviceController.updateOta.bind(deviceController));
 router.use(requireAuth);
 router.get('/', deviceController.list.bind(deviceController));
+router.post('/companion', deviceController.ensureCompanion.bind(deviceController));
 router.post('/pairing-sessions', deviceController.startPairing.bind(deviceController));
 router.get('/pairing-sessions/:id', deviceController.getPairing.bind(deviceController));
 router.post('/pairing-sessions/:id/complete', deviceController.completePairing.bind(deviceController));

@@ -4,6 +4,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import swaggerUi from 'swagger-ui-express';
+import { openapiDocument } from '@/config/openapi.js';
 import analyticsRoutes from '@/modules/analytics/analytics.routes.js';
 import authRoutes from '@/modules/auth/auth.routes.js';
 import consentRoutes from '@/modules/consent/consent.routes.js';
@@ -56,6 +58,8 @@ app.use('/referral', referralRoutes);
 app.use('/notifications', notificationRoutes);
 app.use('/preferences', preferenceRoutes);
 app.use('/profile', profileRoutes);
+app.get('/openapi.json', (_request, response) => response.json(openapiDocument));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
 app.use((_request, response) => {
   response.status(404).json({ status: 'error', message: 'Route not found' });
