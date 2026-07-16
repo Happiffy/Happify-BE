@@ -1,9 +1,11 @@
 import moodRepository from '@/modules/mood/mood.repository.js';
-import type { CreateMoodDTO } from '@/modules/mood/mood.validation.js';
+import type { CreateMoodDTO, MoodListQuery } from '@/modules/mood/mood.validation.js';
 
 class MoodService {
-  async list(userId: string, limit: number) {
-    return moodRepository.mood.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: limit });
+  async list(userId: string, query: MoodListQuery) {
+    const startDate = query.startDate ? new Date(Date.UTC(query.startDate.getUTCFullYear(), query.startDate.getUTCMonth(), query.startDate.getUTCDate())) : undefined;
+    const endDate = query.endDate ? new Date(Date.UTC(query.endDate.getUTCFullYear(), query.endDate.getUTCMonth(), query.endDate.getUTCDate() + 1)) : undefined;
+    return moodRepository.mood.findMany({ where: { userId, ...(startDate && endDate ? { createdAt: { gte: startDate, lt: endDate } } : {}) }, orderBy: { createdAt: 'desc' }, take: query.limit });
   }
 
   async create(userId: string, body: CreateMoodDTO) {

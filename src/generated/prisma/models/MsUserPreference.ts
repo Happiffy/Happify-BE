@@ -35,6 +35,10 @@ export type MsUserPreferenceMinAggregateOutputType = {
   reducedMotion: boolean | null
   screenReaderOptimized: boolean | null
   consentToAi: boolean | null
+  careChatNotifications: boolean | null
+  referralNotifications: boolean | null
+  moodReminderNotifications: boolean | null
+  wellbeingUpdateNotifications: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +54,10 @@ export type MsUserPreferenceMaxAggregateOutputType = {
   reducedMotion: boolean | null
   screenReaderOptimized: boolean | null
   consentToAi: boolean | null
+  careChatNotifications: boolean | null
+  referralNotifications: boolean | null
+  moodReminderNotifications: boolean | null
+  wellbeingUpdateNotifications: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -67,6 +75,10 @@ export type MsUserPreferenceCountAggregateOutputType = {
   reducedMotion: number
   screenReaderOptimized: number
   consentToAi: number
+  careChatNotifications: number
+  referralNotifications: number
+  moodReminderNotifications: number
+  wellbeingUpdateNotifications: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -84,6 +96,10 @@ export type MsUserPreferenceMinAggregateInputType = {
   reducedMotion?: true
   screenReaderOptimized?: true
   consentToAi?: true
+  careChatNotifications?: true
+  referralNotifications?: true
+  moodReminderNotifications?: true
+  wellbeingUpdateNotifications?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -99,6 +115,10 @@ export type MsUserPreferenceMaxAggregateInputType = {
   reducedMotion?: true
   screenReaderOptimized?: true
   consentToAi?: true
+  careChatNotifications?: true
+  referralNotifications?: true
+  moodReminderNotifications?: true
+  wellbeingUpdateNotifications?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -116,6 +136,10 @@ export type MsUserPreferenceCountAggregateInputType = {
   reducedMotion?: true
   screenReaderOptimized?: true
   consentToAi?: true
+  careChatNotifications?: true
+  referralNotifications?: true
+  moodReminderNotifications?: true
+  wellbeingUpdateNotifications?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -206,6 +230,10 @@ export type MsUserPreferenceGroupByOutputType = {
   reducedMotion: boolean
   screenReaderOptimized: boolean
   consentToAi: boolean
+  careChatNotifications: boolean
+  referralNotifications: boolean
+  moodReminderNotifications: boolean
+  wellbeingUpdateNotifications: boolean
   createdAt: Date
   updatedAt: Date
   _count: MsUserPreferenceCountAggregateOutputType | null
@@ -244,6 +272,10 @@ export type MsUserPreferenceWhereInput = {
   reducedMotion?: Prisma.BoolFilter<"MsUserPreference"> | boolean
   screenReaderOptimized?: Prisma.BoolFilter<"MsUserPreference"> | boolean
   consentToAi?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  careChatNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  referralNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  moodReminderNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
   createdAt?: Prisma.DateTimeFilter<"MsUserPreference"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MsUserPreference"> | Date | string
   user?: Prisma.XOR<Prisma.MsUserScalarRelationFilter, Prisma.MsUserWhereInput>
@@ -262,6 +294,10 @@ export type MsUserPreferenceOrderByWithRelationInput = {
   reducedMotion?: Prisma.SortOrder
   screenReaderOptimized?: Prisma.SortOrder
   consentToAi?: Prisma.SortOrder
+  careChatNotifications?: Prisma.SortOrder
+  referralNotifications?: Prisma.SortOrder
+  moodReminderNotifications?: Prisma.SortOrder
+  wellbeingUpdateNotifications?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.MsUserOrderByWithRelationInput
@@ -283,6 +319,10 @@ export type MsUserPreferenceWhereUniqueInput = Prisma.AtLeast<{
   reducedMotion?: Prisma.BoolFilter<"MsUserPreference"> | boolean
   screenReaderOptimized?: Prisma.BoolFilter<"MsUserPreference"> | boolean
   consentToAi?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  careChatNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  referralNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  moodReminderNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFilter<"MsUserPreference"> | boolean
   createdAt?: Prisma.DateTimeFilter<"MsUserPreference"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MsUserPreference"> | Date | string
   user?: Prisma.XOR<Prisma.MsUserScalarRelationFilter, Prisma.MsUserWhereInput>
@@ -301,6 +341,10 @@ export type MsUserPreferenceOrderByWithAggregationInput = {
   reducedMotion?: Prisma.SortOrder
   screenReaderOptimized?: Prisma.SortOrder
   consentToAi?: Prisma.SortOrder
+  careChatNotifications?: Prisma.SortOrder
+  referralNotifications?: Prisma.SortOrder
+  moodReminderNotifications?: Prisma.SortOrder
+  wellbeingUpdateNotifications?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.MsUserPreferenceCountOrderByAggregateInput
@@ -324,6 +368,10 @@ export type MsUserPreferenceScalarWhereWithAggregatesInput = {
   reducedMotion?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
   screenReaderOptimized?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
   consentToAi?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
+  careChatNotifications?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
+  referralNotifications?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
+  moodReminderNotifications?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolWithAggregatesFilter<"MsUserPreference"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"MsUserPreference"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"MsUserPreference"> | Date | string
 }
@@ -340,6 +388,10 @@ export type MsUserPreferenceCreateInput = {
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.MsUserCreateNestedOneWithoutPreferenceInput
@@ -358,6 +410,10 @@ export type MsUserPreferenceUncheckedCreateInput = {
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -374,6 +430,10 @@ export type MsUserPreferenceUpdateInput = {
   reducedMotion?: Prisma.BoolFieldUpdateOperationsInput | boolean
   screenReaderOptimized?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentToAi?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  careChatNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  referralNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  moodReminderNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.MsUserUpdateOneRequiredWithoutPreferenceNestedInput
@@ -392,6 +452,10 @@ export type MsUserPreferenceUncheckedUpdateInput = {
   reducedMotion?: Prisma.BoolFieldUpdateOperationsInput | boolean
   screenReaderOptimized?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentToAi?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  careChatNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  referralNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  moodReminderNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -409,6 +473,10 @@ export type MsUserPreferenceCreateManyInput = {
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -425,6 +493,10 @@ export type MsUserPreferenceUpdateManyMutationInput = {
   reducedMotion?: Prisma.BoolFieldUpdateOperationsInput | boolean
   screenReaderOptimized?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentToAi?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  careChatNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  referralNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  moodReminderNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -442,6 +514,10 @@ export type MsUserPreferenceUncheckedUpdateManyInput = {
   reducedMotion?: Prisma.BoolFieldUpdateOperationsInput | boolean
   screenReaderOptimized?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentToAi?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  careChatNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  referralNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  moodReminderNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -464,6 +540,10 @@ export type MsUserPreferenceCountOrderByAggregateInput = {
   reducedMotion?: Prisma.SortOrder
   screenReaderOptimized?: Prisma.SortOrder
   consentToAi?: Prisma.SortOrder
+  careChatNotifications?: Prisma.SortOrder
+  referralNotifications?: Prisma.SortOrder
+  moodReminderNotifications?: Prisma.SortOrder
+  wellbeingUpdateNotifications?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -479,6 +559,10 @@ export type MsUserPreferenceMaxOrderByAggregateInput = {
   reducedMotion?: Prisma.SortOrder
   screenReaderOptimized?: Prisma.SortOrder
   consentToAi?: Prisma.SortOrder
+  careChatNotifications?: Prisma.SortOrder
+  referralNotifications?: Prisma.SortOrder
+  moodReminderNotifications?: Prisma.SortOrder
+  wellbeingUpdateNotifications?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -494,6 +578,10 @@ export type MsUserPreferenceMinOrderByAggregateInput = {
   reducedMotion?: Prisma.SortOrder
   screenReaderOptimized?: Prisma.SortOrder
   consentToAi?: Prisma.SortOrder
+  careChatNotifications?: Prisma.SortOrder
+  referralNotifications?: Prisma.SortOrder
+  moodReminderNotifications?: Prisma.SortOrder
+  wellbeingUpdateNotifications?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -564,6 +652,10 @@ export type MsUserPreferenceCreateWithoutUserInput = {
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -580,6 +672,10 @@ export type MsUserPreferenceUncheckedCreateWithoutUserInput = {
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -612,6 +708,10 @@ export type MsUserPreferenceUpdateWithoutUserInput = {
   reducedMotion?: Prisma.BoolFieldUpdateOperationsInput | boolean
   screenReaderOptimized?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentToAi?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  careChatNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  referralNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  moodReminderNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -628,6 +728,10 @@ export type MsUserPreferenceUncheckedUpdateWithoutUserInput = {
   reducedMotion?: Prisma.BoolFieldUpdateOperationsInput | boolean
   screenReaderOptimized?: Prisma.BoolFieldUpdateOperationsInput | boolean
   consentToAi?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  careChatNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  referralNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  moodReminderNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  wellbeingUpdateNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -647,6 +751,10 @@ export type MsUserPreferenceSelect<ExtArgs extends runtime.Types.Extensions.Inte
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.MsUserDefaultArgs<ExtArgs>
@@ -665,6 +773,10 @@ export type MsUserPreferenceSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.MsUserDefaultArgs<ExtArgs>
@@ -683,6 +795,10 @@ export type MsUserPreferenceSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.MsUserDefaultArgs<ExtArgs>
@@ -701,11 +817,15 @@ export type MsUserPreferenceSelectScalar = {
   reducedMotion?: boolean
   screenReaderOptimized?: boolean
   consentToAi?: boolean
+  careChatNotifications?: boolean
+  referralNotifications?: boolean
+  moodReminderNotifications?: boolean
+  wellbeingUpdateNotifications?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MsUserPreferenceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "primaryGoal" | "triggers" | "supportTone" | "highRiskAction" | "accessibilityMode" | "textScale" | "highContrast" | "reducedMotion" | "screenReaderOptimized" | "consentToAi" | "createdAt" | "updatedAt", ExtArgs["result"]["msUserPreference"]>
+export type MsUserPreferenceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "primaryGoal" | "triggers" | "supportTone" | "highRiskAction" | "accessibilityMode" | "textScale" | "highContrast" | "reducedMotion" | "screenReaderOptimized" | "consentToAi" | "careChatNotifications" | "referralNotifications" | "moodReminderNotifications" | "wellbeingUpdateNotifications" | "createdAt" | "updatedAt", ExtArgs["result"]["msUserPreference"]>
 export type MsUserPreferenceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.MsUserDefaultArgs<ExtArgs>
 }
@@ -734,6 +854,10 @@ export type $MsUserPreferencePayload<ExtArgs extends runtime.Types.Extensions.In
     reducedMotion: boolean
     screenReaderOptimized: boolean
     consentToAi: boolean
+    careChatNotifications: boolean
+    referralNotifications: boolean
+    moodReminderNotifications: boolean
+    wellbeingUpdateNotifications: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["msUserPreference"]>
@@ -1172,6 +1296,10 @@ export interface MsUserPreferenceFieldRefs {
   readonly reducedMotion: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
   readonly screenReaderOptimized: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
   readonly consentToAi: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
+  readonly careChatNotifications: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
+  readonly referralNotifications: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
+  readonly moodReminderNotifications: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
+  readonly wellbeingUpdateNotifications: Prisma.FieldRef<"MsUserPreference", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"MsUserPreference", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"MsUserPreference", 'DateTime'>
 }

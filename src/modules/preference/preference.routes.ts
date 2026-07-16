@@ -6,6 +6,7 @@ const router = Router();
 
 router.use(requireAuth);
 router.get('/', preferenceController.getByUserId.bind(preferenceController));
+router.patch('/notifications', preferenceController.updateNotifications.bind(preferenceController));
 router.put('/', preferenceController.upsert.bind(preferenceController));
 
 export default router;

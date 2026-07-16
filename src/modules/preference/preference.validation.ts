@@ -25,4 +25,7 @@ export const preferenceSchema = z.object({
   notifications: notificationPreferencesSchema.default({ careChat: false, referral: false, moodReminders: false, wellbeingUpdates: false }),
 });
 
+export const notificationPreferencesPatchSchema = notificationPreferencesSchema.partial().refine((value) => Object.keys(value).length > 0, 'At least one notification preference is required.');
+
 export type PreferenceDTO = z.infer<typeof preferenceSchema>;
+export type NotificationPreferencesPatchDTO = z.infer<typeof notificationPreferencesPatchSchema>;

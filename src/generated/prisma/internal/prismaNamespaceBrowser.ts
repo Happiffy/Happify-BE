@@ -485,6 +485,10 @@ export const MsUserPreferenceScalarFieldEnum = {
   reducedMotion: 'reducedMotion',
   screenReaderOptimized: 'screenReaderOptimized',
   consentToAi: 'consentToAi',
+  careChatNotifications: 'careChatNotifications',
+  referralNotifications: 'referralNotifications',
+  moodReminderNotifications: 'moodReminderNotifications',
+  wellbeingUpdateNotifications: 'wellbeingUpdateNotifications',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

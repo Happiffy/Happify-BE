@@ -1,9 +1,20 @@
 import preferenceRepository from '@/modules/preference/preference.repository.js';
-import type { PreferenceDTO } from '@/modules/preference/preference.validation.js';
+import type { NotificationPreferencesPatchDTO, PreferenceDTO } from '@/modules/preference/preference.validation.js';
 
 class PreferenceService {
   getByUserId(userId: string) {
     return preferenceRepository.userPreference.findUnique({ where: { userId } });
+  }
+
+  async updateNotifications(userId: string, body: NotificationPreferencesPatchDTO) {
+    const existing = await preferenceRepository.userPreference.findUnique({ where: { userId }, select: { id: true } });
+    if (!existing) throw new Error('Complete onboarding preferences before changing notifications.');
+    return preferenceRepository.userPreference.update({ where: { userId }, data: {
+      ...(body.careChat === undefined ? {} : { careChatNotifications: body.careChat }),
+      ...(body.referral === undefined ? {} : { referralNotifications: body.referral }),
+      ...(body.moodReminders === undefined ? {} : { moodReminderNotifications: body.moodReminders }),
+      ...(body.wellbeingUpdates === undefined ? {} : { wellbeingUpdateNotifications: body.wellbeingUpdates }),
+    } });
   }
 
   upsert(userId: string, body: PreferenceDTO) {

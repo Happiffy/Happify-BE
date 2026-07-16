@@ -2,12 +2,21 @@ import type { Request, Response } from 'express';
 import { getAuthUser } from '@/modules/auth/auth.middleware.js';
 import { getErrorMessage, getStatusCode } from '@/utils/request.util.js';
 import preferenceService from '@/modules/preference/preference.service.js';
-import { preferenceSchema } from '@/modules/preference/preference.validation.js';
+import { notificationPreferencesPatchSchema, preferenceSchema } from '@/modules/preference/preference.validation.js';
 
 class PreferenceController {
   async getByUserId(_request: Request, response: Response) {
     try {
       const preference = await preferenceService.getByUserId(getAuthUser(response).id);
+      return response.json({ status: 'success', data: { preference } });
+    } catch (error) {
+      return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) });
+    }
+  }
+
+  async updateNotifications(request: Request, response: Response) {
+    try {
+      const preference = await preferenceService.updateNotifications(getAuthUser(response).id, notificationPreferencesPatchSchema.parse(request.body));
       return response.json({ status: 'success', data: { preference } });
     } catch (error) {
       return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) });
