@@ -609,21 +609,25 @@ model TrHeatmapContribution {
 }
 
 model MsUserPreference {
-  id                    String                 @id @default(cuid())
-  userId                String                 @unique
-  primaryGoal           String
-  triggers              String[]               @default([])
-  supportTone           String
-  highRiskAction        String
-  accessibilityMode     String[]               @default([])
-  textScale             AccessibilityTextScale @default(STANDARD)
-  highContrast          Boolean                @default(false)
-  reducedMotion         Boolean                @default(false)
-  screenReaderOptimized Boolean                @default(false)
-  consentToAi           Boolean                @default(false)
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  user                  MsUser                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                           String                 @id @default(cuid())
+  userId                       String                 @unique
+  primaryGoal                  String
+  triggers                     String[]               @default([])
+  supportTone                  String
+  highRiskAction               String
+  accessibilityMode            String[]               @default([])
+  textScale                    AccessibilityTextScale @default(STANDARD)
+  highContrast                 Boolean                @default(false)
+  reducedMotion                Boolean                @default(false)
+  screenReaderOptimized        Boolean                @default(false)
+  consentToAi                  Boolean                @default(false)
+  careChatNotifications        Boolean                @default(false)
+  referralNotifications        Boolean                @default(false)
+  moodReminderNotifications    Boolean                @default(false)
+  wellbeingUpdateNotifications Boolean                @default(false)
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime               @updatedAt
+  user                         MsUser                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([primaryGoal])
   @@index([supportTone])

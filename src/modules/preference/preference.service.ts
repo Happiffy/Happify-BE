@@ -18,6 +18,10 @@ class PreferenceService {
       reducedMotion: body.accessibility.reducedMotion,
       screenReaderOptimized: body.accessibility.screenReaderOptimized,
       consentToAi: body.consentToAi,
+      careChatNotifications: body.notifications.careChat,
+      referralNotifications: body.notifications.referral,
+      moodReminderNotifications: body.notifications.moodReminders,
+      wellbeingUpdateNotifications: body.notifications.wellbeingUpdates,
     };
     return preferenceRepository.userPreference.upsert({ where: { userId }, update: data, create: { userId, ...data } });
   }
