@@ -8,7 +8,7 @@ class HeatmapController {
   async list(request: Request, response: Response) {
     try {
       const query = heatmapQuerySchema.parse(request.query);
-      const items = await heatmapService.list(query.days);
+      const items = await heatmapService.list(query);
       return response.json({ status: 'success', data: { items } });
     } catch (error) {
       return response.status(getStatusCode(error)).json({ status: 'error', message: getErrorMessage(error) });

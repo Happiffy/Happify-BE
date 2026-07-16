@@ -1,5 +1,5 @@
 import heatmapRepository from '@/modules/heatmap/heatmap.repository.js';
-import type { HeatmapContributionDTO } from '@/modules/heatmap/heatmap.validation.js';
+import type { HeatmapContributionDTO, HeatmapQuery } from '@/modules/heatmap/heatmap.validation.js';
 
 const minimumCohort = Math.max(3, Number(process.env.HEATMAP_K_ANONYMITY ?? 5));
 
@@ -21,11 +21,12 @@ class HeatmapService {
     return contribution;
   }
 
-  async list(days: number) {
-    const since = utcDay(new Date(Date.now() - (days - 1) * 86400000));
+  async list(query: HeatmapQuery) {
+    const startDate = query.startDate ? utcDay(query.startDate) : utcDay(new Date(Date.now() - ((query.days ?? 7) - 1) * 86400000));
+    const endDate = query.endDate ? utcDay(query.endDate) : utcDay();
     const groups = await heatmapRepository.contribution.groupBy({
       by: ['regionKey', 'mood'],
-      where: { bucketDate: { gte: since } },
+      where: { bucketDate: { gte: startDate, lte: endDate } },
       _count: { _all: true },
     });
     const regions = new Map<string, { count: number; moods: Record<string, number> }>();
