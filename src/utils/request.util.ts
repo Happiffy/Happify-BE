@@ -41,8 +41,13 @@ export function handleError(error: unknown): Error {
   return new Error('INTERNAL_ERROR');
 }
 
+function isFirebaseAuthError(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string' && error.code.startsWith('auth/');
+}
+
 export function getStatusCode(error: unknown): number {
   if (error instanceof ZodError) return 400;
+  if (isFirebaseAuthError(error)) return 401;
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') return 409;
     if (error.code === 'P2003') return 400;
@@ -53,6 +58,7 @@ export function getStatusCode(error: unknown): number {
 
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ZodError) return error.issues.map((issue) => issue.message).join(', ');
+  if (isFirebaseAuthError(error)) return 'UNAUTHENTICATED';
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === 'P2002') return 'CONFLICT';
     if (error.code === 'P2003') return 'INVALID_REFERENCE';

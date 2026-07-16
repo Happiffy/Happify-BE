@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { cert, getApp, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getMessaging } from 'firebase-admin/messaging';
@@ -7,7 +7,8 @@ function getFirebaseApp() {
   if (getApps().length) return getApp();
 
   const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-  const serviceAccountJson = serviceAccountPath ? readFileSync(serviceAccountPath, 'utf8') : process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON ??
+    (serviceAccountPath && existsSync(serviceAccountPath) ? readFileSync(serviceAccountPath, 'utf8') : undefined);
   if (serviceAccountJson) {
     return initializeApp({
       credential: cert(JSON.parse(serviceAccountJson)),
