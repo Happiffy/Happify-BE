@@ -1,24 +1,20 @@
 # Happify Backend
 
-Backend API untuk Happify, platform kesehatan mental yang menangani autentikasi, mood tracking, journaling, AI Companion, device companion, analytics, referral profesional, dan penyimpanan data pengguna.
-
----
+The Happify Backend is the API and data hub for Happify. It serves the web and mobile clients and coordinates authentication, mood tracking, journaling, AI companion requests, companion devices, anonymous community interactions, and professional-care workflows.
 
 ## Overview
 
-BE-Happify menjadi pusat data dan API untuk frontend web, mobile app, dan AI Companion. Service ini menghubungkan:
+The backend connects:
 
-- pengguna Happify dengan fitur mood dan journaling
-- aplikasi dengan AI-Happify untuk voice transcription dan analisis jurnal
-- aplikasi dengan perangkat Companion untuk pairing, telemetry, mood sync, dan command
-- pengguna dengan psikolog atau provider melalui referral
-- data aplikasi dengan PostgreSQL, Firebase, dan object storage
+- Happify users with mood tracking, journaling, mindfulness, and motivation features
+- The application with Happify AI for voice processing and journal analysis
+- Web and mobile clients with PostgreSQL, Firebase, and S3-compatible object storage
+- Users with psychologists and providers through referrals and care chat
+- Companion devices with pairing, telemetry, mood sync, commands, and firmware metadata
 
-Backend tidak menjalankan model AI secara langsung. Pemrosesan AI diarahkan ke AI-Happify melalui satu base URL bersama.
+The backend does not run AI models directly. AI processing is delegated to Happify AI through one shared service base URL.
 
----
-
-## Tech Stack
+## Technology Stack
 
 | Area | Stack |
 | --- | --- |
@@ -30,66 +26,56 @@ Backend tidak menjalankan model AI secara langsung. Pemrosesan AI diarahkan ke A
 | Security | Helmet, CORS, request logging |
 | Realtime | WebSocket |
 | File Storage | S3-compatible object storage |
-| AI Integration | AI-Happify, optional AI proxy |
-| Testing | Node test runner, tsx |
-| Deployment | Railway |
-
----
+| AI Integration | Happify AI and an optional AI proxy |
+| Testing | Node test runner and tsx |
 
 ## Features
 
-- **Authentication** - Firebase token verification dan user session handling.
-- **RBAC** - role `USER`, `PSYCHOLOGIST`, `MODERATOR`, dan `ADMIN`.
-- **Mood Tracking** - pencatatan mood dan histori perkembangan pengguna.
-- **Daily Journaling** - penyimpanan journal dengan optional AI reflection dan risk analysis.
-- **Voice Companion** - upload voice turn ke AI-Happify, penyimpanan transcript, response, mood, risk, dan session ID.
-- **Mood Analytics** - agregasi trend mood dan pola mood dari voice session.
-- **Companion Pairing** - pairing device, runtime credential, heartbeat, telemetry, dan mood sync.
-- **Device Commands** - haptic therapy, display message, configuration, restart, dan lifecycle command.
-- **Firmware and OTA** - compatibility check, firmware release, dan deployment lifecycle.
-- **Consent Management** - consent untuk AI processing, voice, emotion observation, dan heatmap.
-- **Community** - post, comment, report, moderation, dan safe-space workflow.
-- **Professional Referral** - referral ke psikolog, konselor, klinik, atau crisis line.
-- **Mindfulness and Motivation** - konten mindfulness dan personalized motivation.
-- **Media Upload** - validasi dan upload media melalui S3-compatible storage.
-- **Realtime Updates** - broadcast update untuk care, referral, dan device events.
-
----
+- **Authentication** — Firebase token verification and user provisioning.
+- **RBAC** — `USER`, `PSYCHOLOGIST`, `MODERATOR`, and `ADMIN` roles.
+- **Mood Tracking** — Mood records and wellbeing history.
+- **Daily Journaling** — Journal storage with optional AI reflection and risk analysis.
+- **Voice Companion** — Voice-turn upload, transcript, response, mood, risk, and session history.
+- **Mood Analytics** — Dashboard trends and voice-session mood patterns.
+- **Consent Management** — Consent for AI, voice, emotion observations, and heatmap contributions.
+- **Anonymous Community** — Anonymous posts, comments, support, reporting, and moderation workflows.
+- **Anonymous Heatmap** — Coarse regional aggregates protected by a configurable anonymity threshold.
+- **Professional Care** — Psychologist applications, referrals, and care chat.
+- **Mindfulness and Motivation** — Published exercises and progress tracking.
+- **Companion Devices** — Pairing, runtime credentials, telemetry, commands, firmware releases, and OTA metadata.
+- **Media Upload** — Validated uploads to S3-compatible storage.
+- **Realtime Updates** — Community, referral, care, and device-event broadcasts.
 
 ## API Routes
 
 | Prefix | Description |
 | --- | --- |
-| `/health` | Health check backend |
-| `/auth` | Authentication dan user account |
+| `/health` | Backend health check |
+| `/auth` | Authentication and user accounts |
 | `/profile` | User profile |
 | `/preferences` | User preferences |
 | `/mood` | Mood tracking |
-| `/journal` | Daily journal dan AI journal analysis |
-| `/voice` | Voice session, transcript, response audio |
-| `/analytics` | Mood analytics dan pattern summary |
+| `/journal` | Daily journals and AI journal analysis |
+| `/voice` | Voice sessions, transcripts, and response audio |
+| `/analytics` | Mood analytics and pattern summaries |
 | `/motivation` | Personalized motivation |
-| `/mindfulness` | Mindfulness content dan progress |
-| `/community` | Peer community dan moderation |
-| `/devices` | Companion device pairing dan runtime API |
-| `/heatmap` | Anonymous mood heatmap |
+| `/mindfulness` | Mindfulness content and progress |
+| `/community` | Anonymous peer community and moderation |
+| `/heatmap` | Anonymous aggregated mood heatmap |
 | `/consents` | Consent management |
-| `/referral` | Professional referral dan care chat |
+| `/referral` | Professional referrals and care chat |
 | `/providers` | Professional provider directory |
 | `/emergency-contacts` | Emergency contact management |
-| `/notifications` | Push notification dan notification state |
-| `/media` | Media upload dan retrieval |
-| `/simulator` | Optional device simulator routes |
-
----
+| `/notifications` | Push notifications and notification state |
+| `/media` | Media upload and retrieval |
+| `/devices` | Companion-device APIs |
 
 ## Environment Variables
 
-Buat file `.env` dari `.env.example`.
+Create `.env` from `.env.example`.
 
 ```env
 PORT=4000
-NODE_ENV=development
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/happify?schema=public
 CORS_ORIGIN=http://localhost:5173
 PUBLIC_API_URL=http://localhost:4000
@@ -98,19 +84,19 @@ FIREBASE_PROJECT_ID=happify-990c2
 FIREBASE_SERVICE_ACCOUNT_JSON=
 
 AI_SERVICE_BASE_URL=http://localhost:8000
-AI_SERVICE_TOKEN=your_shared_ai_service_token
+AI_SERVICE_TOKEN=
 VOICE_UPSTREAM_TIMEOUT_MS=45000
 AI_JOURNAL_TIMEOUT_MS=15000
 VOICE_MAX_AUDIO_BYTES=6291456
 VOICE_AUDIO_TTL_SECONDS=900
 
-S3_ENDPOINT_URL=https://t3.storageapi.dev
+S3_ENDPOINT_URL=
 S3_REGION=auto
-S3_BUCKET_NAME=your_bucket_name
-S3_ACCESS_KEY_ID=your_access_key_id
-S3_SECRET_ACCESS_KEY=your_secret_access_key
+S3_BUCKET_NAME=
+S3_ACCESS_KEY_ID=
+S3_SECRET_ACCESS_KEY=
 
-DEVICE_CLAIM_PEPPER=your_random_secret
+DEVICE_CLAIM_PEPPER=
 PAIRING_SESSION_TTL_SECONDS=300
 DEVICE_CREDENTIAL_TTL_SECONDS=2592000
 DEVICE_OBSERVATION_RETENTION_DAYS=30
@@ -119,32 +105,28 @@ HEATMAP_K_ANONYMITY=5
 
 | Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string untuk Prisma. |
-| `CORS_ORIGIN` | Origin FE yang diizinkan. Bisa berupa beberapa origin dipisahkan koma. |
-| `PUBLIC_API_URL` | URL public BE untuk asset dan callback backend. |
-| `FIREBASE_PROJECT_ID` | Firebase project ID Happify. |
-| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin service account JSON untuk production. |
-| `AI_SERVICE_BASE_URL` | Satu-satunya URL AI-Happify untuk voice dan journal. Production: `https://happify-ai-production.up.railway.app`. |
-| `AI_SERVICE_TOKEN` | Token yang harus sama persis dengan token pada AI-Happify. |
-| `VOICE_UPSTREAM_TIMEOUT_MS` | Timeout request voice ke AI-Happify. |
-| `AI_JOURNAL_TIMEOUT_MS` | Timeout request journal analysis ke AI-Happify. |
-| `S3_*` | Konfigurasi object storage untuk media. |
-| `DEVICE_CLAIM_PEPPER` | Secret untuk hashing claim secret device. |
+| `DATABASE_URL` | PostgreSQL connection string used by Prisma. |
+| `CORS_ORIGIN` | Allowed frontend origin or comma-separated origins. |
+| `PUBLIC_API_URL` | Public backend URL for backend-generated links and assets. |
+| `FIREBASE_PROJECT_ID` | Firebase project identifier. |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin service-account JSON. |
+| `AI_SERVICE_BASE_URL` | Single Happify AI base URL for voice and journal processing. |
+| `AI_SERVICE_TOKEN` | Shared token used to authenticate backend-to-AI requests. |
+| `S3_*` | Object-storage configuration for media. |
+| `DEVICE_CLAIM_PEPPER` | Secret used to hash companion-device claim secrets. |
+| `HEATMAP_K_ANONYMITY` | Minimum contribution count before a heatmap region is returned. |
 
-Voice dan journal sengaja memakai satu `AI_SERVICE_BASE_URL`. Jangan menambahkan `AI_VOICE_BASE_URL` atau `AI_JOURNAL_BASE_URL` terpisah.
-
----
+Do not commit `.env`, Firebase credentials, service tokens, media-storage keys, or device secrets.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js `22.x` atau versi yang sesuai dengan project
-- npm
+- Node.js and npm
 - PostgreSQL
-- Firebase project dan Firebase Admin credentials
-- S3-compatible bucket untuk upload media
-- AI-Happify aktif jika ingin memakai voice atau AI journal analysis
+- Firebase Admin credentials
+- S3-compatible storage for media uploads
+- Happify AI for voice and AI journal analysis
 
 ### Installation
 
@@ -156,9 +138,11 @@ npm install
 
 ```bash
 npm run prisma:generate
-npm run prisma:migrate
+npm run prisma:deploy
 npm run seed
 ```
+
+The seed is idempotent and provisions reference data plus representative demo data. Firebase seed-account passwords are created only when needed and printed once in the seed terminal output.
 
 ### Development
 
@@ -166,25 +150,16 @@ npm run seed
 npm run dev
 ```
 
-Backend berjalan pada `http://localhost:4000` secara default.
+The default local server URL is `http://localhost:4000`.
 
-### Build
+### Build and Start
 
 ```bash
 npm run build
-```
-
-### Start
-
-```bash
 npm start
 ```
 
-Production start runs `prisma migrate deploy` before the server starts.
-
----
-
-## Verification
+### Verification
 
 ```bash
 npx prisma format
@@ -194,85 +169,36 @@ npm test
 npm run build
 ```
 
-Migration database tidak dijalankan otomatis oleh verification command.
-
----
-
-## Deployment
-
-Production backend menggunakan Railway.
-
-| Environment | URL |
-| --- | --- |
-| Local | `http://localhost:4000` |
-| Production | `https://happify-be-production.up.railway.app` |
-| AI Service | `https://happify-ai-production.up.railway.app` |
-
-Railway melakukan deployment dari branch `main`. Set semua secret melalui Railway Variables dan jangan commit `.env` atau credential Firebase.
-
----
-
-## Simulator
-
-Simulator device hanya menguji HTTP software contract, bukan hardware fisik.
-
-Aktifkan route simulator:
-
-```env
-ENABLE_SIMULATOR_ROUTES=true
-```
-
-Jalankan command:
-
-```bash
-npm run simulator:register
-npm run simulator:telemetry
-```
-
-Simulator tidak memvalidasi BLE/Wi-Fi transport, MQTT QoS, camera hardware, haptic calibration, firmware flashing, atau power-loss recovery.
-
----
-
 ## Project Structure
 
-```txt
+```text
 src
-|-- config              # Prisma, Firebase, dan konfigurasi aplikasi
+|-- config              # Prisma, Firebase, and application configuration
 |-- generated           # Generated Prisma client
 |-- modules
-|   |-- analytics       # Mood pattern dan dashboard analytics
-|   |-- auth            # Firebase auth dan RBAC
-|   |-- community       # Peer community dan moderation
+|   |-- analytics       # Dashboard and mood analytics
+|   |-- auth            # Firebase authentication and RBAC
+|   |-- community       # Anonymous community and moderation
 |   |-- consent         # Consent management
-|   |-- device          # Pairing, telemetry, command, dan OTA
-|   |-- journal         # Journal dan AI journal adapter
-|   |-- media           # Object storage upload
+|   |-- device          # Pairing, telemetry, commands, and OTA metadata
+|   |-- journal         # Journals and AI journal adapter
+|   |-- media           # Object-storage uploads
 |   |-- mindfulness     # Mindfulness content
 |   |-- mood            # Mood tracking
 |   |-- motivation      # Daily motivation
-|   |-- referral        # Professional referral dan care chat
-|   |-- voice           # Voice transcription dan session history
-|-- utils               # Request, AI, dan shared utilities
+|   |-- referral        # Professional referrals and care chat
+|   |-- voice           # Voice processing and session history
+|-- utils               # Request, AI, and shared utilities
 |-- server.ts           # Express entry point
 prisma
 |-- schema.prisma       # Database schema
 |-- migrations          # Database migrations
+|-- seed.ts             # Reference and representative demo data
 ```
 
----
+## Privacy and Safety
 
-## Service Architecture
-
-```txt
-Happify FE / Mobile
-        |
-        v
-   BE-Happify
-     |   |   \
-     |   |    +--> PostgreSQL / Prisma
-     |   +-------> Firebase Admin
-     +-----------> S3-compatible Storage
-        |
-        v
-   AI-Happify
-```
+- Community public responses are sanitized to exclude internal user IDs, email addresses, and profiles.
+- Heatmap responses contain only coarse aggregated regions that satisfy the anonymity threshold.
+- The AI service is supportive and does not provide diagnosis or emergency care.
+- Raw camera images are not accepted by device emotion-observation APIs.

@@ -3,6 +3,14 @@ import type { CommunityReportDTO, CreateCommunityPostDTO, ModerationDTO } from '
 import { broadcast } from '@/modules/realtime/realtime.js';
 import { richTextToPlainText, sanitizeRichText } from '@/utils/html.util.js';
 
+function toPublicComment(comment: { id: string; alias: string; content: string; imageUrl: string | null; createdAt: Date }) {
+  return { id: comment.id, alias: comment.alias, content: comment.content, imageUrl: comment.imageUrl, createdAt: comment.createdAt };
+}
+
+function toPublicPost(post: { id: string; alias: string; content: string; imageUrl: string | null; mood: string | null; supportCount: number; createdAt: Date; comments?: Array<{ id: string; alias: string; content: string; imageUrl: string | null; createdAt: Date }> }, likedByMe = false) {
+  return { id: post.id, alias: post.alias, content: post.content, imageUrl: post.imageUrl, mood: post.mood, supportCount: post.supportCount, createdAt: post.createdAt, comments: (post.comments ?? []).map(toPublicComment), likedByMe };
+}
+
 class CommunityService {
   async list(cursor: string | undefined, limit: number, userId: string) {
     const posts = await communityRepository.communityPost.findMany({
@@ -15,17 +23,18 @@ class CommunityService {
         supports: { where: { userId }, select: { id: true } },
       },
     });
-    return posts.map((post) => ({ ...post, likedByMe: post.supports.length > 0, supports: undefined }));
+    return posts.map((post) => toPublicPost(post, post.supports.length > 0));
   }
 
   async create(userId: string, body: CreateCommunityPostDTO) {
     const content = sanitizeRichText(body.content);
     if (!richTextToPlainText(content)) throw new Error('INVALID_CONTENT');
     const post = await communityRepository.communityPost.create({
-      data: { userId, alias: body.alias, content, imageUrl: body.imageUrl ?? null, mood: body.mood ?? null },
+      data: { userId, alias: 'Anonymous', content, imageUrl: body.imageUrl ?? null, mood: body.mood ?? null },
     });
-    broadcast('community', { type: 'community:post', post });
-    return post;
+    const publicPost = toPublicPost(post);
+    broadcast('community', { type: 'community:post', post: publicPost });
+    return publicPost;
   }
 
   async comment(postId: string, userId: string, body: { content: string; imageUrl?: string | undefined }) {
@@ -36,8 +45,9 @@ class CommunityService {
     const comment = await communityRepository.communityComment.create({
       data: { postId, userId, alias: 'Anonymous', content, imageUrl: body.imageUrl ?? null },
     });
-    broadcast('community', { type: 'community:comment', postId, comment });
-    return comment;
+    const publicComment = toPublicComment(comment);
+    broadcast('community', { type: 'community:comment', postId, comment: publicComment });
+    return publicComment;
   }
 
   async support(postId: string, userId: string) {
@@ -45,11 +55,14 @@ class CommunityService {
       const post = await transaction.trCommunityPost.findFirst({ where: { id: postId, isHidden: false }, select: { id: true } });
       if (!post) throw new Error('NOT_FOUND');
       const existing = await transaction.trCommunitySupport.findUnique({ where: { userId_postId: { userId, postId } } });
-      if (existing) return transaction.trCommunityPost.findUnique({ where: { id: postId } });
+      if (existing) {
+        const unchanged = await transaction.trCommunityPost.findUnique({ where: { id: postId } });
+        return unchanged ? toPublicPost(unchanged, true) : null;
+      }
       await transaction.trCommunitySupport.create({ data: { userId, postId } });
       const updated = await transaction.trCommunityPost.update({ where: { id: postId }, data: { supportCount: { increment: 1 } } });
       broadcast('community', { type: 'community:support', postId, supportCount: updated.supportCount });
-      return updated;
+      return toPublicPost(updated, true);
     });
   }
 

@@ -51,7 +51,7 @@ async function main() {
     prisma.msUser.findUnique({ where: { email: psychologistEmail }, select: { id: true } }),
   ]);
   const [seededUser, seededPsychologist] = await Promise.all([
-    ensureFirebaseUser(userEmail, 'Nadia Pratama', !existingUser),
+    ensureFirebaseUser(userEmail, 'Nanda Pratama', !existingUser),
     ensureFirebaseUser(psychologistEmail, 'Dr. Maya Santoso, M.Psi., Psikolog', !existingPsychologist),
   ]);
   const firebaseUser = seededUser.user;
@@ -64,8 +64,8 @@ async function main() {
 
     const user = await tx.msUser.upsert({
       where: { firebaseUid: firebaseUser.uid },
-      update: { email: userEmail, displayName: 'Nadia Pratama', avatarUrl: null, bio: 'Sedang membangun kebiasaan refleksi yang lebih sehat.', role: 'USER' },
-      create: { firebaseUid: firebaseUser.uid, email: userEmail, displayName: 'Nadia Pratama', bio: 'Sedang membangun kebiasaan refleksi yang lebih sehat.', role: 'USER' },
+      update: { email: userEmail, displayName: 'Nanda Pratama', avatarUrl: null, bio: 'Sedang membangun kebiasaan refleksi yang lebih sehat.', role: 'USER' },
+      create: { firebaseUid: firebaseUser.uid, email: userEmail, displayName: 'Nanda Pratama', bio: 'Sedang membangun kebiasaan refleksi yang lebih sehat.', role: 'USER' },
     });
     const psychologist = await tx.msUser.upsert({
       where: { firebaseUid: firebasePsychologist.uid },
@@ -113,21 +113,89 @@ async function main() {
     await tx.trMoodEntry.deleteMany({ where: { userId: user.id } });
     await tx.trMoodEntry.createMany({
       data: [
-        { userId: user.id, state: 'CALM', intensity: 4, triggers: ['morning walk'], note: 'Lebih tenang setelah berjalan pagi.', createdAt: new Date('2026-07-12T01:30:00.000Z') },
+        { userId: user.id, state: 'CALM', intensity: 4, triggers: ['morning walk'], note: 'Lebih tenang setelah berjalan pagi.', createdAt: new Date('2026-07-10T01:30:00.000Z') },
+        { userId: user.id, state: 'HAPPY', intensity: 4, triggers: ['completed task'], note: 'Senang karena satu tugas besar akhirnya selesai.', createdAt: new Date('2026-07-11T10:15:00.000Z') },
         { userId: user.id, state: 'ANXIOUS', intensity: 3, triggers: ['deadline pekerjaan'], note: 'Sedikit cemas menjelang presentasi.', createdAt: new Date('2026-07-14T09:00:00.000Z') },
+        { userId: user.id, state: 'CALM', intensity: 4, triggers: ['breathing exercise'], note: 'Napas kotak membantu saya berhenti terburu-buru.', createdAt: new Date('2026-07-15T03:45:00.000Z') },
         { userId: user.id, state: 'NEUTRAL', intensity: 3, triggers: ['istirahat cukup'], note: 'Energi stabil dan fokus kembali.', createdAt: new Date('2026-07-16T02:00:00.000Z') },
+        { userId: user.id, state: 'ANXIOUS', intensity: 2, triggers: ['meeting mendadak'], note: 'Tegang sebentar, lalu menuliskan poin yang bisa saya kontrol.', createdAt: new Date('2026-07-16T09:30:00.000Z') },
+        { userId: user.id, state: 'CALM', intensity: 4, triggers: ['evening routine'], note: 'Menutup hari dengan lebih pelan dan tidak membawa pekerjaan ke waktu istirahat.', createdAt: new Date('2026-07-17T12:00:00.000Z') },
       ],
     });
     await tx.trJournalEntry.deleteMany({ where: { userId: user.id } });
     await tx.trJournalEntry.createMany({
       data: [
-        { userId: user.id, title: 'Merapikan prioritas', content: 'Hari ini saya membagi pekerjaan menjadi bagian yang lebih kecil dan memberi jeda setelah setiap fokus singkat.', detectedMood: 'CALM', riskLevel: 'LOW', aiReflection: 'Strategi membagi tugas dapat membantu menjaga beban terasa lebih terukur.', createdAt: new Date('2026-07-13T12:00:00.000Z') },
-        { userId: user.id, title: 'Menjelang presentasi', content: 'Saya takut membuat kesalahan, tetapi sudah menyiapkan poin utama dan meminta umpan balik dari rekan kerja.', detectedMood: 'ANXIOUS', riskLevel: 'LOW', aiReflection: 'Persiapan dan mencari dukungan adalah langkah yang membantu. Coba beri ruang untuk napas sebelum presentasi.', createdAt: new Date('2026-07-15T11:30:00.000Z') },
+        { userId: user.id, title: 'Merapikan prioritas', content: 'Hari ini saya membagi pekerjaan menjadi bagian yang lebih kecil dan memberi jeda setelah setiap fokus singkat.', detectedMood: 'CALM', riskLevel: 'LOW', aiReflection: 'Strategi membagi tugas dapat membantu menjaga beban terasa lebih terukur.', createdAt: new Date('2026-07-11T12:00:00.000Z') },
+        { userId: user.id, title: 'Menjelang presentasi', content: 'Saya takut membuat kesalahan, tetapi sudah menyiapkan poin utama dan meminta umpan balik dari rekan kerja.', detectedMood: 'ANXIOUS', riskLevel: 'LOW', aiReflection: 'Persiapan dan mencari dukungan adalah langkah yang membantu. Coba beri ruang untuk napas sebelum presentasi.', createdAt: new Date('2026-07-13T11:30:00.000Z') },
+        { userId: user.id, title: 'Jeda sebelum membalas pesan', content: 'Saya memilih menunda membalas pesan kerja saat sedang lelah. Setelah makan dan minum, respons saya jadi lebih jelas.', detectedMood: 'NEUTRAL', riskLevel: 'LOW', aiReflection: 'Memberi jeda sebelum merespons adalah bentuk batas yang sehat dan dapat dipraktikkan lagi.', createdAt: new Date('2026-07-15T14:00:00.000Z') },
+        { userId: user.id, title: 'Hal kecil yang berhasil', content: 'Saya menyelesaikan daftar prioritas, berjalan sebentar, dan menelepon teman. Hari ini tidak sempurna, tetapi terasa cukup.', detectedMood: 'HAPPY', riskLevel: 'LOW', aiReflection: 'Mencatat keberhasilan kecil dapat memperkuat rasa mampu dan membantu melihat pola yang mendukung.', createdAt: new Date('2026-07-17T12:30:00.000Z') },
       ],
     });
+    const communityProfiles = await Promise.all([
+      { firebaseUid: 'seed-community-01', email: 'community.01@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-02', email: 'community.02@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-03', email: 'community.03@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-04', email: 'community.04@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-05', email: 'community.05@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-06', email: 'community.06@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-07', email: 'community.07@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-08', email: 'community.08@seed.happify.invalid' },
+      { firebaseUid: 'seed-community-09', email: 'community.09@seed.happify.invalid' },
+    ].map((account) => tx.msUser.upsert({
+      where: { firebaseUid: account.firebaseUid },
+      update: { email: account.email, displayName: 'Anonymous community member', role: 'USER' },
+      create: { firebaseUid: account.firebaseUid, email: account.email, displayName: 'Anonymous community member', role: 'USER' },
+    })));
+    const [communityOne, communityTwo, communityThree, communityFour, communityFive, communitySix, communitySeven, communityEight, communityNine] = communityProfiles;
+    if (!communityOne || !communityTwo || !communityThree || !communityFour || !communityFive || !communitySix || !communitySeven || !communityEight || !communityNine) throw new Error('Community seed profiles are missing.');
+    const communityUserIds = [user.id, communityOne.id, communityTwo.id, communityThree.id, communityFour.id, communityFive.id, communitySix.id, communitySeven.id, communityEight.id, communityNine.id];
+    await tx.trCommunityPost.deleteMany({ where: { userId: { in: communityUserIds } } });
+    const communityPosts = await Promise.all([
+      { userId: user.id, content: 'Hari ini saya mencoba membagi tugas besar menjadi tiga langkah kecil. Rasanya masih menegangkan, tapi lebih mungkin dikerjakan.', mood: 'ANXIOUS' as const, createdAt: new Date('2026-07-16T10:00:00.000Z') },
+      { userId: user.id, content: 'Pengingat untuk diri sendiri: istirahat lima menit bukan berarti saya gagal produktif.', mood: 'CALM' as const, createdAt: new Date('2026-07-17T04:30:00.000Z') },
+      { userId: communityOne.id, content: 'Saya mulai menaruh ponsel jauh dari meja saat fokus. Ternyata lima belas menit tanpa distraksi sudah cukup membantu.', mood: 'CALM' as const, createdAt: new Date('2026-07-16T07:00:00.000Z') },
+      { userId: communityTwo.id, content: 'Menulis satu hal yang masih bisa saya kendalikan membuat hari yang padat terasa tidak terlalu berat.', mood: 'NEUTRAL' as const, createdAt: new Date('2026-07-16T12:15:00.000Z') },
+      { userId: communityThree.id, content: 'Saya sedang belajar meminta waktu sebelum menjawab pesan yang membuat saya tertekan.', mood: 'ANXIOUS' as const, createdAt: new Date('2026-07-17T02:40:00.000Z') },
+      { userId: communityFour.id, content: 'Jalan singkat setelah makan siang membantu saya kembali fokus tanpa memaksakan diri.', mood: 'HAPPY' as const, createdAt: new Date('2026-07-17T05:10:00.000Z') },
+    ].map((post) => tx.trCommunityPost.create({ data: { ...post, alias: 'Anonymous', supportCount: 0 } })));
+    const [postOne, postTwo, postThree, postFour, postFive, postSix] = communityPosts;
+    if (!postOne || !postTwo || !postThree || !postFour || !postFive || !postSix) throw new Error('Community seed posts are missing.');
+    await tx.trCommunityComment.createMany({
+      data: [
+        { postId: postOne.id, userId: communityOne.id, alias: 'Anonymous', content: 'Terima kasih sudah berbagi. Membuat langkah pertama lebih kecil juga membantu saya.', createdAt: new Date('2026-07-16T10:15:00.000Z') },
+        { postId: postOne.id, userId: user.id, alias: 'Anonymous', content: 'Saya mulai dari menulis tiga poin utama dulu.', createdAt: new Date('2026-07-16T10:25:00.000Z') },
+        { postId: postThree.id, userId: communityThree.id, alias: 'Anonymous', content: 'Ide yang baik. Saya ingin mencoba hal yang sama besok.', createdAt: new Date('2026-07-16T07:20:00.000Z') },
+        { postId: postFive.id, userId: communityFive.id, alias: 'Anonymous', content: 'Memberi jeda itu valid. Semoga kamu bisa menemukan ritme yang nyaman.', createdAt: new Date('2026-07-17T03:00:00.000Z') },
+      ],
+    });
+    await tx.trCommunitySupport.createMany({ data: [
+      { userId: communityOne.id, postId: postOne.id },
+      { userId: communityTwo.id, postId: postOne.id },
+      { userId: communityThree.id, postId: postTwo.id },
+      { userId: communityFour.id, postId: postThree.id },
+      { userId: communityFive.id, postId: postFive.id },
+    ] });
+    await Promise.all(communityPosts.map((post) => tx.trCommunityPost.update({
+      where: { id: post.id },
+      data: { supportCount: 1 },
+    })));
     await tx.msEmergencyContact.deleteMany({ where: { userId: user.id } });
     await tx.msEmergencyContact.create({ data: { userId: user.id, name: 'Rani Pratama', relationship: 'Saudara', phone: '+6281200000000', isPrimary: true } });
-    await tx.trHeatmapContribution.upsert({ where: { userId_bucketDate: { userId: user.id, bucketDate: todayUtc } }, update: { regionKey: 'jakarta-selatan', mood: 'NEUTRAL' }, create: { userId: user.id, regionKey: 'jakarta-selatan', mood: 'NEUTRAL', bucketDate: todayUtc } });
+    await tx.trHeatmapContribution.deleteMany({ where: { userId: { in: communityUserIds }, bucketDate: todayUtc } });
+    await tx.trHeatmapContribution.createMany({
+      data: [
+        { userId: user.id, regionKey: 'jakarta-selatan', mood: 'NEUTRAL', bucketDate: todayUtc },
+        { userId: communityOne.id, regionKey: 'jakarta-selatan', mood: 'CALM', bucketDate: todayUtc },
+        { userId: communityTwo.id, regionKey: 'jakarta-selatan', mood: 'CALM', bucketDate: todayUtc },
+        { userId: communityThree.id, regionKey: 'jakarta-selatan', mood: 'HAPPY', bucketDate: todayUtc },
+        { userId: communityFour.id, regionKey: 'jakarta-selatan', mood: 'NEUTRAL', bucketDate: todayUtc },
+        { userId: communityFive.id, regionKey: 'jakarta-pusat', mood: 'ANXIOUS', bucketDate: todayUtc },
+        { userId: communitySix.id, regionKey: 'jakarta-pusat', mood: 'NEUTRAL', bucketDate: todayUtc },
+        { userId: communitySeven.id, regionKey: 'jakarta-pusat', mood: 'HAPPY', bucketDate: todayUtc },
+        { userId: communityEight.id, regionKey: 'jakarta-pusat', mood: 'CALM', bucketDate: todayUtc },
+        { userId: communityNine.id, regionKey: 'jakarta-pusat', mood: 'ANXIOUS', bucketDate: todayUtc },
+      ],
+    });
 
     const seedReason = 'Routine wellbeing follow-up for seeded user profile';
     const existingReferrals = await tx.trReferral.findMany({ where: { userId: user.id, reason: seedReason }, select: { id: true } });
@@ -141,6 +209,10 @@ async function main() {
     await tx.trCareChatMessage.createMany({ data: [
       { sessionId: chat.id, senderId: user.id, content: 'Halo, saya ingin membahas cara mengelola rasa cemas menjelang pekerjaan penting.', createdAt: new Date('2026-07-16T08:30:00.000Z') },
       { sessionId: chat.id, senderId: psychologist.id, content: 'Terima kasih sudah berbagi. Kita bisa mulai dengan mengenali situasi yang paling memicu dan memilih satu strategi yang realistis untuk dicoba minggu ini.', createdAt: new Date('2026-07-16T08:38:00.000Z') },
+      { sessionId: chat.id, senderId: user.id, content: 'Biasanya rasa tegang muncul saat agenda berubah mendadak atau ketika saya merasa belum cukup siap.', createdAt: new Date('2026-07-16T08:44:00.000Z') },
+      { sessionId: chat.id, senderId: psychologist.id, content: 'Masuk akal. Untuk minggu ini, coba buat daftar singkat: hal yang bisa dikendalikan, hal yang perlu ditanyakan, dan satu jeda napas sebelum rapat.', createdAt: new Date('2026-07-16T08:51:00.000Z') },
+      { sessionId: chat.id, senderId: user.id, content: 'Saya sudah mencoba napas kotak sebelum rapat siang ini. Tidak langsung hilang, tapi saya lebih bisa fokus mendengar.', createdAt: new Date('2026-07-17T03:20:00.000Z') },
+      { sessionId: chat.id, senderId: psychologist.id, content: 'Itu perkembangan yang baik. Tujuannya bukan menghilangkan semua rasa cemas, melainkan memberi ruang agar Anda bisa memilih respons yang membantu.', createdAt: new Date('2026-07-17T03:32:00.000Z') },
     ] });
   }, { maxWait: 15000, timeout: 60000 });
 
