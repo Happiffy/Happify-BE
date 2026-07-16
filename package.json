@@ -11,9 +11,7 @@
     "seed": "prisma db seed",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy",
-    "simulator:register": "tsx scripts/register-device-simulator.ts",
-    "simulator:telemetry": "tsx scripts/send-device-telemetry.ts"
+    "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1083.0",
