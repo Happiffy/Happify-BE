@@ -7,10 +7,11 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc --noEmit",
     "test": "tsx --test src/utils/request.util.test.ts src/modules/voice/voice.validation.test.ts src/modules/analytics/analytics.service.test.ts src/modules/device/firmware-compatibility.test.ts src/modules/device/firmware-discovery-contract.test.ts",
-    "start": "tsx src/server.ts",
+    "start": "npm run prisma:deploy && tsx src/server.ts",
     "seed": "prisma db seed",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
     "simulator:register": "tsx scripts/register-device-simulator.ts",
     "simulator:telemetry": "tsx scripts/send-device-telemetry.ts"
   },

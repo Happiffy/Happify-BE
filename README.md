@@ -180,6 +180,8 @@ npm run build
 npm start
 ```
 
+Production start runs `prisma migrate deploy` before the server starts.
+
 ---
 
 ## Verification
