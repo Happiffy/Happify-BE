@@ -14,7 +14,7 @@ import moodRoutes from '@/modules/mood/mood.routes.js';
 import preferenceRoutes from '@/modules/preference/preference.routes.js';
 import profileRoutes from '@/modules/profile/profile.routes.js';
 import referralRoutes from '@/modules/referral/referral.routes.js';
-import { attachRealtimeServer } from '@/realtime.js';
+import { attachRealtimeServer } from '@/modules/realtime/realtime.js';
 
 const port = Number(process.env.PORT ?? 4000);
 const app = express();

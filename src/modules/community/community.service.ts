@@ -1,6 +1,6 @@
 import communityRepository from '@/modules/community/community.repository.js';
 import type { CreateCommunityPostDTO } from '@/modules/community/community.validation.js';
-import { broadcast } from '@/realtime.js';
+import { broadcast } from '@/modules/realtime/realtime.js';
 import { richTextToPlainText, sanitizeRichText } from '@/utils/html.util.js';
 
 class CommunityService {

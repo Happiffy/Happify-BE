@@ -1,6 +1,6 @@
 import referralRepository from '@/modules/referral/referral.repository.js';
 import type { CreateCareChatMessageDTO, CreateReferralDTO, ReviewReferralDTO } from '@/modules/referral/referral.validation.js';
-import { broadcast } from '@/realtime.js';
+import { broadcast } from '@/modules/realtime/realtime.js';
 import { completeText } from '@/utils/ai.util.js';
 
 class ReferralService {

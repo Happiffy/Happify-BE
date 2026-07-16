@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/prisma/client.js';
-import { firebaseAuth } from './config/firebase.js';
+import { PrismaClient } from '../src/generated/prisma/client.js';
+import { firebaseAuth } from '../src/config/firebase.js';
 
 const databaseUrl = process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/happify?schema=public';
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
@@ -65,5 +65,4 @@ async function main() {
   console.log(`Seed psychologist ready: ${email} / ${password} (${user.id})`);
 }
 
-main()
-  .finally(async () => prisma.$disconnect());
+main().finally(async () => prisma.$disconnect());
