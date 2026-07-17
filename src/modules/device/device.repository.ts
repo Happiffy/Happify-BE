@@ -1,6 +1,7 @@
 import prisma from '@/config/prisma.js';
 
 class DeviceRepository {
+  get user() { return prisma.msUser; }
   get device() { return prisma.msDevice; }
   get pairingSession() { return prisma.trDevicePairingSession; }
   get credential() { return prisma.trDeviceCredential; }

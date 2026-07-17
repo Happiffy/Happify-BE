@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { randomBytes } from 'node:crypto';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { firebaseAuth } from '../src/config/firebase.js';
+import { createClaimSecretDigest } from '../src/modules/device/claim-secret.util.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -110,6 +111,18 @@ async function main() {
     await tx.msDailyMotivation.upsert({ where: { date_locale: { date: todayUtc, locale: 'id' } }, update: { message: 'Satu langkah kecil yang konsisten tetap membawa perubahan.', author: 'Happify' }, create: { date: todayUtc, locale: 'id', message: 'Satu langkah kecil yang konsisten tetap membawa perubahan.', author: 'Happify' } });
     await tx.msDailyMotivation.upsert({ where: { date_locale: { date: todayUtc, locale: 'en' } }, update: { message: 'One consistent small step still creates change.', author: 'Happify' }, create: { date: todayUtc, locale: 'en', message: 'One consistent small step still creates change.', author: 'Happify' } });
 
+    await tx.trCareChatMessage.deleteMany({ where: { session: { userId: user.id } } });
+    await tx.trCareChatSession.deleteMany({ where: { userId: user.id } });
+    await tx.trReferral.deleteMany({ where: { userId: user.id } });
+    await tx.trVoiceTurn.deleteMany({ where: { userId: user.id } });
+    await tx.trCommunityReport.deleteMany({ where: { reporterId: user.id } });
+    await tx.trCommunitySupport.deleteMany({ where: { userId: user.id } });
+    await tx.trCommunityComment.deleteMany({ where: { userId: user.id } });
+    await tx.trCommunityPost.deleteMany({ where: { userId: user.id } });
+    await tx.trMoodGeoPoint.deleteMany({ where: { userId: user.id } });
+    await tx.trHeatmapContribution.deleteMany({ where: { userId: user.id } });
+    await tx.trDeviceEmotionObservation.deleteMany({ where: { userId: user.id } });
+    await tx.trDeviceCheckIn.deleteMany({ where: { userId: user.id } });
     await tx.trMoodEntry.deleteMany({ where: { userId: user.id } });
     await tx.trMoodEntry.createMany({
       data: [
@@ -181,6 +194,28 @@ async function main() {
     })));
     await tx.msEmergencyContact.deleteMany({ where: { userId: user.id } });
     await tx.msEmergencyContact.create({ data: { userId: user.id, name: 'Rani Pratama', relationship: 'Saudara', phone: '+6281200000000', isPrimary: true } });
+    await tx.msDevice.upsert({
+      where: { serialNumber: 'HAPPIFY-NANDA-VOICE-001' },
+      update: {
+        ownerId: user.id,
+        status: 'PAIRED',
+        displayName: 'Nanda Voice Companion',
+        pairedAt: effectiveAt,
+        unpairedAt: null,
+        revokedAt: null,
+        supportedCommandTypes: ['DISPLAY_MESSAGE', 'HAPTIC_THERAPY'],
+      },
+      create: {
+        serialNumber: 'HAPPIFY-NANDA-VOICE-001',
+        model: 'Happify Voice Companion',
+        displayName: 'Nanda Voice Companion',
+        claimSecretDigest: createClaimSecretDigest('seeded-nanda-voice-companion'),
+        ownerId: user.id,
+        status: 'PAIRED',
+        pairedAt: effectiveAt,
+        supportedCommandTypes: ['DISPLAY_MESSAGE', 'HAPTIC_THERAPY'],
+      },
+    });
     await tx.trHeatmapContribution.deleteMany({ where: { userId: { in: communityUserIds }, bucketDate: todayUtc } });
     await tx.trHeatmapContribution.createMany({
       data: [

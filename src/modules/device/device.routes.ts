@@ -1,14 +1,17 @@
-import { Router } from 'express';
+import { Router, raw } from 'express';
 import { requireAuth, requireRole } from '@/modules/auth/auth.middleware.js';
 import { requireDeviceAuth } from '@/modules/device/device.middleware.js';
 import deviceController from '@/modules/device/device.controller.js';
 
 const router = Router();
+router.get('/runtime/context', requireDeviceAuth, deviceController.runtimeContext.bind(deviceController));
 router.post('/runtime/telemetry', requireDeviceAuth, deviceController.telemetry.bind(deviceController));
 router.post('/runtime/heartbeat', requireDeviceAuth, deviceController.heartbeat.bind(deviceController));
 router.post('/runtime/emotion-observations', requireDeviceAuth, deviceController.emotionObservation.bind(deviceController));
 router.post('/runtime/camera-observations', requireDeviceAuth, deviceController.cameraObservation.bind(deviceController));
 router.post('/runtime/mood-sync', requireDeviceAuth, deviceController.moodSync.bind(deviceController));
+router.post('/runtime/voice/turns', requireDeviceAuth, raw({ type: ['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp4', 'audio/webm', 'audio/ogg'], limit: process.env.VOICE_MAX_AUDIO_BYTES ?? '6mb' }), deviceController.voiceTurn.bind(deviceController));
+router.get('/runtime/voice/turns/:turnId/audio', requireDeviceAuth, deviceController.voiceAudio.bind(deviceController));
 router.get('/runtime/commands', requireDeviceAuth, deviceController.pendingCommands.bind(deviceController));
 router.patch('/runtime/commands/:id', requireDeviceAuth, deviceController.updateCommand.bind(deviceController));
 router.get('/runtime/ota', requireDeviceAuth, deviceController.pendingOta.bind(deviceController));

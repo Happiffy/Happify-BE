@@ -115,6 +115,36 @@ class DeviceService {
     return { token: credential.token, expiresAt };
   }
 
+  async runtimeContext(deviceId: string, ownerId: string) {
+    const [device, user, voiceConsent] = await Promise.all([
+      deviceRepository.device.findUniqueOrThrow({
+        where: { id: deviceId },
+        select: { id: true, serialNumber: true, model: true, displayName: true, status: true },
+      }),
+      deviceRepository.user.findUniqueOrThrow({
+        where: { id: ownerId },
+        select: { id: true, displayName: true },
+      }),
+      deviceRepository.consent.findFirst({
+        where: { userId: ownerId, scope: 'VOICE_PROCESSING', status: 'ACCEPTED', revokedAt: null },
+        orderBy: { updatedAt: 'desc' },
+        select: { id: true, version: true },
+      }),
+    ]);
+    return {
+      device,
+      user,
+      voice: {
+        language: 'id',
+        voiceConsentAccepted: Boolean(voiceConsent),
+        maxAudioBytes: Number(process.env.VOICE_MAX_AUDIO_BYTES ?? 6291456),
+        allowedContentTypes: ['audio/wav', 'audio/x-wav', 'audio/mpeg', 'audio/mp4', 'audio/webm', 'audio/ogg'],
+        turnEndpoint: '/devices/runtime/voice/turns',
+        audioEndpointTemplate: '/devices/runtime/voice/turns/{turnId}/audio',
+      },
+    };
+  }
+
   ingestTelemetry(deviceId: string, items: Array<{ metric: string; value: number; unit?: string | undefined; recordedAt: Date; metadata?: Record<string, string | number | boolean | null> | undefined }>) {
     return deviceRepository.telemetry.createMany({ data: items.map((item) => ({ deviceId, metric: item.metric, value: item.value, unit: item.unit ?? null, recordedAt: item.recordedAt, ...(item.metadata ? { metadata: item.metadata as Prisma.InputJsonValue } : {}) })) });
   }
