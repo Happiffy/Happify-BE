@@ -27,46 +27,18 @@ Device tidak perlu:
 ```bash
 cd Happify-BE
 npm run seed
-npm run provision:iot:nanda
 ```
 
-Perintah kedua membuat file lokal berikut:
-
-```text
-Happify-BE/.secrets/nanda-voice-companion-context.h
-```
-
-File ini sudah dibuat pada environment saat ini. Isinya adalah credential nyata yang diperlukan firmware:
+Firmware memakai device runtime credential yang dikeluarkan dari paired-device flow. Simpan konfigurasi private di firmware, bukan di Git:
 
 ```cpp
-#pragma once
-
-#define HAPPIFY_API_BASE_URL "..."
-#define HAPPIFY_DEVICE_RUNTIME_TOKEN "..."
-#define HAPPIFY_USER_ID "..."
-#define HAPPIFY_USER_NAME "Nanda Pratama"
-#define HAPPIFY_DEVICE_ID "..."
-#define HAPPIFY_DEVICE_SERIAL "HAPPIFY-NANDA-VOICE-001"
-#define HAPPIFY_VOICE_TURN_ENDPOINT "/devices/runtime/voice/turns"
-#define HAPPIFY_VOICE_AUDIO_TEMPLATE "/devices/runtime/voice/turns/{turnId}/audio"
-#define HAPPIFY_VOICE_LANGUAGE "id"
-#define HAPPIFY_DEVICE_TOKEN_EXPIRES_AT "..."
+#define WIFI_SSID "<WIFI_SSID>"
+#define WIFI_PASSWORD "<WIFI_PASSWORD>"
+#define HAPPIFY_API_BASE_URL "<HAPPIFY_BACKEND_URL>"
+#define HAPPIFY_DEVICE_RUNTIME_TOKEN "<ISSUED_DEVICE_TOKEN>"
 ```
 
-Copy file tersebut ke private include folder firmware, misalnya:
-
-```text
-firmware/include/nanda-voice-companion-context.h
-```
-
-File `.secrets/` di-ignore Git. Jangan commit header hasil generate, jangan menaruh token dalam prompt, screenshot, log serial, atau source code public.
-
-Setiap menjalankan `npm run provision:iot:nanda`:
-
-- token lama device Nanda dicabut;
-- satu token baru dibuat;
-- header firmware diperbarui;
-- token default berlaku 30 hari.
+Jangan commit token device, password Wi-Fi, atau data credential lain. Token ini mengidentifikasi device yang dipair ke Nanda; backend otomatis memakai owner device tersebut.
 
 ## Konfigurasi Wi‑Fi firmware
 
@@ -277,7 +249,7 @@ Device tidak perlu membaca atau menampilkan riwayat chat.
 
 | API message | UI device | Tindakan |
 | --- | --- | --- |
-| `DEVICE_UNAUTHENTICATED` | `TOKEN EXPIRED` | Jalankan `npm run provision:iot:nanda`, copy header baru, flash/reload firmware. |
+| `DEVICE_UNAUTHENTICATED` | `TOKEN EXPIRED` | Issue ulang device runtime credential dari paired-device flow, lalu update firmware configuration. |
 | `AI_CONSENT_REQUIRED` | `VOICE CONSENT REQUIRED` | Aktifkan consent Voice Processing di aplikasi Nanda. |
 | `INVALID_AUDIO` | `RECORD AGAIN` | Rekaman terlalu singkat/rusak. |
 | `AUDIO_TOO_LARGE` | `AUDIO TOO LONG` | Batasi panjang rekam. |
