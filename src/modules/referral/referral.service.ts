@@ -2,7 +2,7 @@ import type { AuthUser } from '@/modules/auth/auth.middleware.js';
 import notificationService from '@/modules/notification/notification.service.js';
 import referralRepository from '@/modules/referral/referral.repository.js';
 import type { CreateCareChatMessageDTO, CreateReferralDTO, ReviewReferralDTO } from '@/modules/referral/referral.validation.js';
-import { broadcast } from '@/modules/realtime/realtime.js';
+import { broadcast, isUserActiveInChannel } from '@/modules/realtime/realtime.js';
 import { completeText } from '@/utils/ai.util.js';
 
 class ReferralService {
@@ -82,7 +82,7 @@ class ReferralService {
   }
 
   async listChatSessions(userId: string, page: number, limit: number) {
-    return referralRepository.careChatSession.findMany({
+    const sessions = await referralRepository.careChatSession.findMany({
       where: { OR: [{ userId }, { psychologistId: userId }] },
       orderBy: { updatedAt: 'desc' },
       take: limit,
@@ -94,6 +94,13 @@ class ReferralService {
         messages: { orderBy: { createdAt: 'asc' }, take: 30, include: { sender: { select: { id: true, displayName: true, avatarUrl: true, role: true } } } },
       },
     });
+    return sessions.map((session) => ({
+      ...session,
+      peerOnline: isUserActiveInChannel(
+        `care-chat:${session.id}`,
+        session.userId === userId ? session.psychologistId : session.userId,
+      ),
+    }));
   }
 
   async getChatSession(id: string, userId: string) {

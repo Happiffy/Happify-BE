@@ -22,6 +22,10 @@ export function broadcast(channel: string, payload: unknown) {
   for (const socket of channels.get(channel) ?? []) send(socket, payload);
 }
 
+export function isUserActiveInChannel(channel: string, userId: string) {
+  return [...(channels.get(channel) ?? [])].some((socket) => socketUsers.get(socket)?.id === userId);
+}
+
 function broadcastPresence(channel: string) {
   if (!channel.startsWith('care-chat:')) return;
   broadcast(channel, { type: 'presence', channel, count: channels.get(channel)?.size ?? 0 });
