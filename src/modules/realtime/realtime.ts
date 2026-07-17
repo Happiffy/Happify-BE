@@ -22,11 +22,17 @@ export function broadcast(channel: string, payload: unknown) {
   for (const socket of channels.get(channel) ?? []) send(socket, payload);
 }
 
+function broadcastPresence(channel: string) {
+  if (!channel.startsWith('care-chat:')) return;
+  broadcast(channel, { type: 'presence', channel, count: channels.get(channel)?.size ?? 0 });
+}
+
 function leave(socket: WebSocket, channel: string) {
   const sockets = channels.get(channel);
   sockets?.delete(socket);
   socketChannels.get(socket)?.delete(channel);
   if (sockets?.size === 0) channels.delete(channel);
+  broadcastPresence(channel);
 }
 
 function join(socket: WebSocket, channel: string) {
@@ -36,6 +42,7 @@ function join(socket: WebSocket, channel: string) {
   const subscriptions = socketChannels.get(socket) ?? new Set<string>();
   subscriptions.add(channel);
   socketChannels.set(socket, subscriptions);
+  broadcastPresence(channel);
 }
 
 async function authorizeChannel(user: AuthUser, channel: string) {
