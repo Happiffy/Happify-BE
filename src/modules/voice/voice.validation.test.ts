@@ -81,6 +81,24 @@ test('normalizes the canonical AI voice contract', () => {
   });
 });
 
+test('normalizes a successful AI fallback when STT returns an empty transcript', () => {
+  const result = voiceUpstreamSchema.parse({
+    ...canonicalResponse,
+    transcript: { ...canonicalResponse.transcript, text: '' },
+    response: { ...canonicalResponse.response, text: 'I am here with you.' },
+  });
+
+  assert.deepEqual(result, {
+    transcript: '',
+    responseText: 'I am here with you.',
+    riskLevel: 'HIGH',
+    detectedMood: 'DISTRESSED',
+    emotionConfidence: 0.88,
+    upstreamAudioPath: '/api/audio/tts_abcdef123456.mp3',
+    upstreamRequestId: 'req-voice-1',
+  });
+});
+
 test('normalizes the legacy snake-case contract', () => {
   const result = voiceUpstreamSchema.parse({
     transcript: 'Hello',

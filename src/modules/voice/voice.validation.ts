@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const textSchema = z.string().trim().min(1).max(10000);
+const transcriptSchema = z.string().trim().max(10000);
 const requestIdSchema = z.string().trim().min(1).max(200);
 const audioPathSchema = z.string().regex(/^\/api\/audio\/tts_[a-f0-9]{12}\.mp3$/);
 const canonicalRiskSchema = z.enum(['low', 'medium', 'high', 'crisis']);
@@ -11,7 +12,7 @@ const moodSchema = z.enum(['CALM', 'HAPPY', 'NEUTRAL', 'SAD', 'ANXIOUS', 'DISTRE
 const canonicalVoiceUpstreamSchema = z.object({
   contract_version: z.literal('1.0.0'),
   request_id: requestIdSchema,
-  transcript: z.object({ text: textSchema }),
+  transcript: z.object({ text: transcriptSchema }),
   response: z.object({
     text: textSchema,
     audio_url: audioPathSchema.nullable(),
