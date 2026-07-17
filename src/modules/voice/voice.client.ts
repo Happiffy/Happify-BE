@@ -1,6 +1,6 @@
 const baseUrl = process.env.AI_SERVICE_BASE_URL?.replace(/\/$/, '');
 const serviceToken = process.env.AI_SERVICE_TOKEN;
-const timeoutMs = Number(process.env.VOICE_UPSTREAM_TIMEOUT_MS ?? 45000);
+const timeoutMs = Number(process.env.VOICE_UPSTREAM_TIMEOUT_MS ?? 75000);
 
 function requireConfig() {
   if (!baseUrl || !serviceToken) throw new Error('VOICE_NOT_CONFIGURED');
