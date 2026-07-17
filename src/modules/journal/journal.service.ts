@@ -1,6 +1,6 @@
 import journalRepository from '@/modules/journal/journal.repository.js';
 import notificationService from '@/modules/notification/notification.service.js';
-import type { CreateJournalDTO } from '@/modules/journal/journal.validation.js';
+import type { CreateJournalDTO, JournalListQuery } from '@/modules/journal/journal.validation.js';
 import { analyzeJournalWithAi } from '@/modules/journal/journal.client.js';
 import { richTextToPlainText, sanitizeRichText } from '@/utils/html.util.js';
 
@@ -12,8 +12,10 @@ type JournalAnalysis = {
 };
 
 class JournalService {
-  async list(userId: string, limit: number, page: number) {
-    return journalRepository.journalEntry.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: limit, skip: (page - 1) * limit });
+  async list(userId: string, query: JournalListQuery) {
+    const startDate = query.startDate ? new Date(Date.UTC(query.startDate.getUTCFullYear(), query.startDate.getUTCMonth(), query.startDate.getUTCDate())) : undefined;
+    const endDate = query.endDate ? new Date(Date.UTC(query.endDate.getUTCFullYear(), query.endDate.getUTCMonth(), query.endDate.getUTCDate() + 1)) : undefined;
+    return journalRepository.journalEntry.findMany({ where: { userId, ...(startDate && endDate ? { createdAt: { gte: startDate, lt: endDate } } : {}) }, orderBy: { createdAt: 'desc' }, take: query.limit, skip: (query.page - 1) * query.limit });
   }
 
   async create(userId: string, body: CreateJournalDTO) {
