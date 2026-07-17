@@ -7,6 +7,15 @@ function utcDay(date = new Date()) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
+function gridMetadata(regionKey: string) {
+  const match = /^G([NS])(\d+)_([EW])(\d+)$/.exec(regionKey);
+  if (!match) return null;
+  const latitude = Number(match[2]) / 10 * (match[1] === 'S' ? -1 : 1);
+  const longitude = Number(match[4]) / 10 * (match[3] === 'W' ? -1 : 1);
+  const size = 0.1;
+  return { latitude, longitude, bounds: { south: latitude, west: longitude, north: latitude + size, east: longitude + size } };
+}
+
 class HeatmapService {
   async contribute(userId: string, body: HeatmapContributionDTO) {
     const latestDocument = await heatmapRepository.consentDocument.findFirst({ where: { scope: 'HEATMAP_CONTRIBUTION', isActive: true, effectiveAt: { lte: new Date() } }, orderBy: { version: 'desc' }, select: { id: true } });
@@ -39,11 +48,16 @@ class HeatmapService {
     }
     return [...regions.entries()]
       .filter(([, value]) => value.users.size >= minimumCohort)
-      .map(([regionKey, value]) => ({
-        regionKey,
-        count: value.users.size,
-        moods: Object.fromEntries(Object.entries(value.moods).map(([mood, users]) => [mood, users.size])),
-      }))
+       .flatMap(([regionKey, value]) => {
+         const grid = gridMetadata(regionKey);
+         if (!grid) return [];
+         return [{
+           regionKey,
+           ...grid,
+           count: value.users.size,
+           moods: Object.fromEntries(Object.entries(value.moods).map(([mood, users]) => [mood, users.size])),
+         }];
+       })
       .sort((a, b) => b.count - a.count);
   }
 }
